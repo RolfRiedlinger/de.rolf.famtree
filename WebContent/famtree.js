@@ -1,8 +1,21 @@
+
+//--------------------------------------------------------------------------------------------
+//  Javascript global variables and arrays
+//--------------------------------------------------------------------------------------------
+// some attribute arrays. Currently in the "play around" state and not fully thought through 
+// intention is to easily scale the software with new person features.
+// attribute and create attribute differ only in the ID. The ID is created by the database 
+// however I like to have the ID displayed. It is the unique identifier of a person entry. 
 var attribute = [ "ID", "PRENAME", "SURNAME", "BIRTHDAY", "LASTMARRIAGE",
-		"LASTPROFESSION", "FATHER_ID", "MOTHER_ID" ];
+		"LASTPROFESSION"];
 var createAttribute = [ "PRENAME", "SURNAME", "BIRTHDAY", "LASTPROFESSION" ];
-var updateAttribute = [ "ID", "PRENAME", "SURNAME", "BIRTHDAY", "LASTMARRIAGE",
-		"LASTPROFESSION", "FATHER_ID", "MOTHER_ID" ];
+
+// margin: parameter for the <svg> grafics
+// width, height define the grafc area size
+// A person's information is displayed in a rectangle panel. 
+// I try to compute the size of the rectangle's sizes  based on the fontsize, 
+// the length of the longest person detail and the estimated fontwidth. needs 
+// improvement. 
 
 var margin = {
 	top : 40,
@@ -15,47 +28,48 @@ var width = 500 - margin.left - margin.right;
 var height = 500 - margin.top - margin.bottom;
 var fontSize = 15;
 
-function personListHeader() {
-	var myString = "";
-	for (var i = 0; i < attribute.length; i++) {
-		myString += "<th>" + attribute[i] + "</th>";
-	}
-	return myString;
-}
+var req;  // req variable for the http communication
 
-var req;
+//--------------------------------------------------------------------------------------------
+// Javascript global objects
+//--------------------------------------------------------------------------------------------
 
+// listOfPerson object holds the result of a Query to the famtree database. 
+// push() , adds a person to the list,  get() returns a person from the list 
+// methods:
+// toTable: writes the list in an html table. Als Parameter wird die ein class Name übergeben, über den später die 
+// 			Zeilen der Tabelle highlighted werden. 
+// clear :  löschen der Liste.
 var listOfPerson = {
-	_listofPerson : [],
+	_listOfPerson : [],
 	push : function(value) {
-		this._listofPerson.push(value);
+		this._listOfPerson.push(value);
 	},
 	get : function(index) {
-		return this._listofPerson[index];
+		return this._listOfPerson[index];
 	},
-	toTable : function() {
+	toTable : function(styleAttribute) {
 		var tableString = "<table border = 2 cellpaddding = 10>";
 		tableString += personListHeader();
-		for (var i = 0; i < this._listofPerson.length; i++)
-			tableString += this._listofPerson[i].toRow;
-		tableString += "</table>";
-		return tableString;
-	},
-	toDialogTable : function() {
-		var tableString = "<table border = 2 cellpaddding = 10>";
-		tableString += personListHeader();
-		for (var i = 0; i < this._listofPerson.length; i++)
-			tableString += this._listofPerson[i].toDialogRow;
+		
+		for (var i = 0; i < this._listOfPerson.length; i++){
+			tableString += this._listOfPerson[i].toRow(styleAttribute);
+		}
+			
 		tableString += "</table>";
 		return tableString;
 	},
 	clear : function() {
-		while (this._listofPerson.length > 0) {
-			this._listofPerson.pop();
+		while (this._listOfPerson.length > 0) {
+			this._listOfPerson.pop();
 		}
 	}
 };
 
+// person is the object to hold the person's information 
+// these are the attributes as well as the father and the mother 
+// the structure is defined recursively, it has a person object for father and one for mother
+// this way a whole tree could be kept in this structure. 
 var Person = function(node1) {
 
 	Object.defineProperties(
@@ -85,13 +99,13 @@ var Person = function(node1) {
 							},
 
 						},
+				
 						"toRow" : {
-							get : function() {
-								var myString = "<tr  class=updateClass>";
+							value : function(className) {
+								var myString = "<tr  class="+ className+">";
 								for (var i = 0; i < attribute.length; i++) {
 									if (this[attribute[i]] != undefined)
-										myString += "<td>" + this[attribute[i]]
-												+ "</td>";
+										myString += "<td>" + this[attribute[i]]+ "</td>";
 									else
 										myString += "<td>&nbsp;</td>";
 								}
@@ -99,20 +113,7 @@ var Person = function(node1) {
 								return myString;
 							}
 						},
-						"toDialogRow" : {
-							get : function() {
-								var myString = "<tr  class=dialogUpdateClass>";
-								for (var i = 0; i < attribute.length; i++) {
-									if (this[attribute[i]] != undefined)
-										myString += "<td>" + this[attribute[i]]
-												+ "</td>";
-									else
-										myString += "<td>&nbsp;</td>";
-								}
-								myString += "</tr>";
-								return myString;
-							}
-						},
+						
 						"toForm" : {
 							get : function() {
 								var temp = "";
@@ -172,7 +173,34 @@ var Person = function(node1) {
 	if (xx.length > 0)
 		this["mother"] = new Person(xx[0]);
 };
+//--------------------------------------------------------------------------------------------
+//Aux function: Http Request initialisation
+//--------------------------------------------------------------------------------------------
+function init() {
+	if (window.XMLHttpRequest) {
+		req = new XMLHttpRequest();
+	} else if (window.ActiveXObject) {
+		req = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	var url = "/de.rolf.famtree/TreeServlet2";
+	req.open("POST", url, true);
+	req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+}
 
+//--------------------------------------------------------------------------------------------
+// Aux function: HTML content : personListHeader: set the header in (search result) table
+//--------------------------------------------------------------------------------------------
+function personListHeader() {
+	var myString = "";
+	for (var i = 0; i < attribute.length; i++) {
+		myString += "<th>" + attribute[i] + "</th>";
+	}
+	return myString;
+}
+
+//--------------------------------------------------------------------------------------------
+//Aux function: HTML content : searchForm: generate a search for person input form
+//--------------------------------------------------------------------------------------------
 function searchForm() {
 
 	var temp = "<H2> Advanced Search Form </H2> <table>";
@@ -186,7 +214,9 @@ function searchForm() {
 	document.getElementById('upper_right').innerHTML = temp;
 
 }
-
+//--------------------------------------------------------------------------------------------
+//Aux function: HTML content : createForm: form for the create Dialog
+//--------------------------------------------------------------------------------------------
 function createForm() {
 
 	$("#upper_right").html("");
@@ -207,41 +237,20 @@ function createForm() {
 	$("#dialog2").dialog("open");
 
 }
+//--------------------------------------------------------------------------------------------
+//Aux function: HTML content : update form table , currently not used
+//--------------------------------------------------------------------------------------------
 function updateForm(index) {
 
-	switch (context) {
-	case "person":
 		var temp = "<H2> Update person entry </H2> ";
 		temp += listOfPerson.get(index).toForm;
 		temp += '<input type=button value=update onclick="updateEntry()">';
 		$("#upper_right").html(temp);
-		break;
-	case "father":
-		if (index < 0) {
-			$("input[name='FATHER']")[0].value = "";
-			$("input[name='FATHER_ID']")[0].value = "";
-		} else {
-			$("input[name='FATHER']")[0].value = listOfPerson.get(index)["PRENAME"]
-					+ " " + listOfPerson.get(index)["SURNAME"];
-			$("input[name='FATHER_ID']")[0].value = listOfPerson.get(index)["ID"];
-		}
-		break;
-	case "mother":
-		if (index < 0) {
-			$("input[name='MOTHER']")[0].value = "";
-			$("input[name='MOTHER_ID']")[0].value = "";
-		} else {
-			$("input[name='MOTHER']")[0].value = listOfPerson.get(index)["PRENAME"]
-					+ " " + listOfPerson.get(index)["SURNAME"];
-			$("input[name='MOTHER_ID']")[0].value = listOfPerson.get(index)["ID"];
-		}
-		break;
-	}
-
 }
 
-var context = "person";
-
+//--------------------------------------------------------------------------------------------
+//Aux function: HTML content : Search Dialogs, currently not used 
+//--------------------------------------------------------------------------------------------
 function searchFather() {
 	listOfPerson.clear();
 	$("#footer2").html(""); // Cleanup footer
@@ -251,7 +260,6 @@ function searchFather() {
 	$("#dialog1").dialog("open");
 
 }
-
 function searchMother() {
 	listOfPerson.clear();
 	$("#footer2").html(""); // Cleanup footer
@@ -262,30 +270,27 @@ function searchMother() {
 
 }
 
-function init() {
-	if (window.XMLHttpRequest) {
-		req = new XMLHttpRequest();
-	} else if (window.ActiveXObject) {
-		req = new ActiveXObject("Microsoft.XMLHTTP");
-	}
-	var url = "/de.rolf.famtree/TreeServlet2";
-	req.open("POST", url, true);
-	req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-}
 
+
+//--------------------------------------------------------------------------------------------
+//Aux function: Call server with form data for quicksearch
+//--------------------------------------------------------------------------------------------
 function quickSearch() {
 	// quicksearch ist eine fuzzy search,
 	// wasdie Datenbank nach ähnlichen Nach- und Vornamen durchsucht
 	// Die Onclick Aktion ist:
 	// die Details der geklickten Person werden oben rechts angezeigt und
 	// können bearbeitet werden
-	context = "person";
 	var query = $("input[name='quicksearch']"); // Suchtext wird gelesen
 	init();
 	req.onreadystatechange = personList;
 	req.send("type=q&SURNAME=" + query[0].value + "&PRENAME=" + query[0].value);
 
 }
+
+//--------------------------------------------------------------------------------------------
+//Aux function: Call server with form data from Dialog -- not used anymore
+//--------------------------------------------------------------------------------------------
 function quickSearchInDialog() {
 	// quicksearch ist eine fuzzy search,
 	// wasdie Datenbank nach ähnlichen Nach- und Vornamen durchsucht
@@ -299,6 +304,9 @@ function quickSearchInDialog() {
 
 }
 
+//--------------------------------------------------------------------------------------------
+//Aux function: Call server with form data from Dialog -- not used anymoreadvanced searchDialog
+//--------------------------------------------------------------------------------------------
 function advancedSearch() {
 
 	var query = "type=a";
@@ -314,6 +322,130 @@ function advancedSearch() {
 	req.onreadystatechange = personList;
 	req.send(query);
 }
+//--------------------------------------------------------------------------------------------
+//Aux function: Call server with form data from Dialog -- create person
+//--------------------------------------------------------------------------------------------
+function createEntry() {
+	// CallFuntion um einen Eintrag in der Datenbank zu ezeugen.
+	// Highlights von Feldern werden zurückgenommen
+	// Dann wird der http request String aufgebaut
+	$(".green").removeClass("green");
+	var query = "type=c";
+	for (var i = 0; i < createAttribute.length; i++) {
+		var field = $("input[name='" + createAttribute[i] + "']");
+		if (field[0].value) {
+			query += "&" + createAttribute[i] + "=" + field[0].value;
+		}
+	}
+
+	init();
+	req.onreadystatechange = personList;
+	req.send(query);
+
+}
+//--------------------------------------------------------------------------------------------
+//Aux function: Call server with form data -- update person -- not used currently
+//--------------------------------------------------------------------------------------------
+function updateEntry() {
+	// CallFuntion um einen Eintrag in der Datenbank zu erneuern.
+	// Highlights von Feldern werden zurückgenommen
+	// Dann wird der http request String aufgebaut
+	$(".green").removeClass("green");
+	var query = "type=u";
+	for (var i = 0; i < attribute.length; i++) {
+		var field = $("input[name='" + attribute[i] + "']");
+		if (field[0].value) {
+			query = query + "&" + attribute[i] + "=" + field[0].value;
+		}
+	}
+
+	init();
+	req.onreadystatechange = personList;
+	req.send(query);
+
+}
+
+//--------------------------------------------------------------------------------------------
+//Aux function: request callback set click behavior: called by personList()
+//After the result is put into a table, the onclick behviour of rows is set
+//--------------------------------------------------------------------------------------------
+function setPersonOnClick() {
+
+	var obj = $(".updateClass");
+	obj.click(function() {
+		var pos = obj.index(this);
+		$(".updateClass").removeClass("green");
+		$(this).addClass("green");
+		showBranch(pos);
+	});
+}
+function setDialogPersonOnClick() {
+
+	var obj = $(".dialogUpdateClass");
+	obj.click(function() {
+		var pos = obj.index(this);
+		$(".dialogUpdateClass").removeClass("green");
+		$(this).addClass("green");
+		updateForm(pos);
+	});
+}
+
+function personList() {
+	// Callbackfunktion für die Suchanfragen an die Datenbank
+	// Eine Suchanfrage liefert immer eine Liste von Personen, die sich für die
+	// Suche qualifizieren, zurück
+	// die XML response des http requests wird geparsed
+	// und die Resultatliste der Personen aufgebaut.
+	// Das Ergebnis wird als Tabelle unten hingeschrieben.
+	// danach wird die Onclick Aktion gesetzt.
+	processXMLResponse();
+	var footer = $("#footer2");
+	footer.html(listOfPerson.toTable("updateClass"));
+	setPersonOnClick();
+}
+
+function personListinDialog() {
+	// Callbackfunktion für die Suchanfragen an die Datenbank
+	// Eine Suchanfrage liefert immer eine Liste von Personen, die sich für die
+	// Suche qualifizieren, zurück
+	// die XML response des http requests wird geparsed
+	// und die Resultatliste der Personen aufgebaut.
+	// Das Ergebnis wird als Tabelle unten hingeschrieben.
+	// danach wird die Onclick Aktion gesetzt.
+	processXMLResponse();
+	var footer = $("#dfooter2");
+	footer.html(listOfPerson.toTable("dialogUpdateClass"));
+	setDialogPersonOnClick();
+}
+
+function processXMLResponse() {
+	listOfPerson.clear();
+	/*
+	 * In the bottom section, create the list of persons that have been found by
+	 * a query. With readyState check whether request is finished Holds the
+	 * status of the XMLHttpRequest. Changes from 0 to 4: 0: request not
+	 * initialized 1: server connection established 2: request received 3:
+	 * processing request 4: request finished and response is ready
+	 */
+	if (req.readyState == 4) {
+
+		// req Status 200 = OK, 404 = page not found
+		if (req.status == 200) {
+
+			// Parse XML tree
+			var indexObj = req.responseXML.getElementsByTagName("person");
+			for (var i = 0; i < indexObj.length; i++) {
+				var node1 = indexObj[i];
+				person = new Person(node1);
+				listOfPerson.push(person);
+			}
+		}
+	}
+}
+
+//--------------------------------------------------------------------------------------------
+//Aux function: D3 Grafics, Anchor point 
+//--------------------------------------------------------------------------------------------
 //
 // Konstruktor für das Anchor Objekt
 //
@@ -332,7 +464,35 @@ var Anchor = function(x, y, person) {
 	this.width = maxLen * fontSize * .5;
 	this.height = (3 + 3.4) * fontSize;
 };
+//--------------------------------------------------------------------------------------------
+//Aux function: D3 Grafics, create a person's panel for showbranch
+//--------------------------------------------------------------------------------------------
+function createPanel(panel, person){
+	panel.append("rect")  // Jetzt das Rechteck einfügen
+	.attr("width", person.anchor.width)
+	.attr("height",person.anchor.height)
+	.attr("rx", 10)
+	.attr("ry", 5)
+	.attr("fill", "steelblue");
 
+var textbox = panel.append("g")   // textbox hinzufügen
+	  	.attr("transform", "translate("+fontSize+","+(fontSize*2)+")") // Schade dass hier nicht em als Einheit genommen werden kann 
+		.style("font-size", fontSize +"px")
+		.style("fill", "white");
+textbox.append("text")
+	.text(person.PRENAME);
+textbox.append("text")
+	.attr("dy", "1.5em")
+	.text(person.SURNAME);
+textbox.append("text")
+	.attr("dy", "3.0em")
+	.text(person.LASTPROFESSION);
+panel.attr("transform","translate("+person.anchor.x+","+person.anchor.y+")");	
+	return;
+}
+//--------------------------------------------------------------------------------------------
+//Aux function: D3 Grafics, Anchor point showbranch
+//--------------------------------------------------------------------------------------------
 function showBranch(pos) {
 	var person = listOfPerson.get(pos);
 	$("#upper_right").html("");
@@ -392,162 +552,9 @@ function showBranch(pos) {
 	
 }
 
-function createPanel(panel, person){
-	panel.append("rect")  // Jetzt das Rechteck einfügen
-	.attr("width", person.anchor.width)
-	.attr("height",person.anchor.height)
-	.attr("rx", 10)
-	.attr("ry", 5)
-	.attr("fill", "steelblue");
-
-var textbox = panel.append("g")   // textbox hinzufügen
-	  	.attr("transform", "translate("+fontSize+","+(fontSize*2)+")") // Schade dass hier nicht em als Einheit genommen werden kann 
-		.style("font-size", fontSize +"px")
-		.style("fill", "white");
-textbox.append("text")
-	.text(person.PRENAME);
-textbox.append("text")
-	.attr("dy", "1.5em")
-	.text(person.SURNAME);
-textbox.append("text")
-	.attr("dy", "3.0em")
-	.text(person.LASTPROFESSION);
-panel.attr("transform","translate("+person.anchor.x+","+person.anchor.y+")");	
-	return;
-}
-
-
-function setPersonOnClick() {
-
-	// für updateForm (default): die Details der geklickten Person werden oben
-	// rechts angezeigt und
-	// können bearbeitet werden
-	// für FATHER: Der Vater Vor und Nachname und ID für die Person, die oben
-	// rechts
-	// bearbeitet wird, wird gesetzt
-	// für MOTHER: Der Mutter or und Nachname und ID für die Person, die oben
-	// rechts
-	// bearbeitet wird, wird gesetzt
-
-	var obj = $(".updateClass");
-	obj.click(function() {
-		var pos = obj.index(this);
-		$(".updateClass").removeClass("green");
-		$(this).addClass("green");
-		showBranch(pos);
-	});
-}
-function setDialogPersonOnClick() {
-
-	// für updateForm (default): die Details der geklickten Person werden oben
-	// rechts angezeigt und
-	// können bearbeitet werden
-	// für FATHER: Der Vater Vor und Nachname und ID für die Person, die oben
-	// rechts
-	// bearbeitet wird, wird gesetzt
-	// für MOTHER: Der Mutter or und Nachname und ID für die Person, die oben
-	// rechts
-	// bearbeitet wird, wird gesetzt
-
-	var obj = $(".dialogUpdateClass");
-	obj.click(function() {
-		var pos = obj.index(this);
-		$(".dialogUpdateClass").removeClass("green");
-		$(this).addClass("green");
-		updateForm(pos);
-	});
-}
-
-function personList() {
-	// Callbackfunktion für die Suchanfragen an die Datenbank
-	// Eine Suchanfrage liefert immer eine Liste von Personen, die sich für die
-	// Suche qualifizieren, zurück
-	// die XML response des http requests wird geparsed
-	// und die Resultatliste der Personen aufgebaut.
-	// Das Ergebnis wird als Tabelle unten hingeschrieben.
-	// danach wird die Onclick Aktion gesetzt.
-	processXMLResponse();
-	var footer = $("#footer2");
-	footer.html(listOfPerson.toTable());
-	setPersonOnClick();
-}
-
-function personListinDialog() {
-	// Callbackfunktion für die Suchanfragen an die Datenbank
-	// Eine Suchanfrage liefert immer eine Liste von Personen, die sich für die
-	// Suche qualifizieren, zurück
-	// die XML response des http requests wird geparsed
-	// und die Resultatliste der Personen aufgebaut.
-	// Das Ergebnis wird als Tabelle unten hingeschrieben.
-	// danach wird die Onclick Aktion gesetzt.
-	processXMLResponse();
-	var footer = $("#dfooter2");
-	footer.html(listOfPerson.toDialogTable());
-	setDialogPersonOnClick();
-}
-
-function processXMLResponse() {
-	listOfPerson.clear();
-	/*
-	 * In the bottom section, create the list of persons that have been found by
-	 * a query. With readyState check whether request is finished Holds the
-	 * status of the XMLHttpRequest. Changes from 0 to 4: 0: request not
-	 * initialized 1: server connection established 2: request received 3:
-	 * processing request 4: request finished and response is ready
-	 */
-	if (req.readyState == 4) {
-
-		// req Status 200 = OK, 404 = page not found
-		if (req.status == 200) {
-
-			// Parse XML tree
-			var indexObj = req.responseXML.getElementsByTagName("person");
-			for (var i = 0; i < indexObj.length; i++) {
-				var node1 = indexObj[i];
-				person = new Person(node1);
-				listOfPerson.push(person);
-			}
-		}
-	}
-}
-
-function createEntry() {
-	// CallFuntion um einen Eintrag in der Datenbank zu ezeugen.
-	// Highlights von Feldern werden zurückgenommen
-	// Dann wird der http request String aufgebaut
-	$(".green").removeClass("green");
-	var query = "type=c";
-	for (var i = 0; i < createAttribute.length; i++) {
-		var field = $("input[name='" + createAttribute[i] + "']");
-		if (field[0].value) {
-			query += "&" + createAttribute[i] + "=" + field[0].value;
-		}
-	}
-
-	init();
-	req.onreadystatechange = personList;
-	req.send(query);
-
-}
-
-function updateEntry() {
-	// CallFuntion um einen Eintrag in der Datenbank zu erneuern.
-	// Highlights von Feldern werden zurückgenommen
-	// Dann wird der http request String aufgebaut
-	$(".green").removeClass("green");
-	var query = "type=u";
-	for (var i = 0; i < updateAttribute.length; i++) {
-		var field = $("input[name='" + updateAttribute[i] + "']");
-		if (field[0].value) {
-			query = query + "&" + updateAttribute[i] + "=" + field[0].value;
-		}
-	}
-
-	init();
-	req.onreadystatechange = personList;
-	req.send(query);
-
-}
+//--------------------------------------------------------------------------------------------
+//Init function after document.ready() -- initialize the dialogs
+//--------------------------------------------------------------------------------------------
 $(function() {
 	$("#dialog1").dialog({
 		position : {
@@ -578,7 +585,6 @@ $(function() {
 			duration : 1000
 		}
 	});
-	$("#dialog2").html("Hey here bin ich");
 	$("#dialog2").dialog({
 		position : {
 			my : "left+10 top+10",

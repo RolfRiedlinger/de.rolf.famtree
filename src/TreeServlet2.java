@@ -17,7 +17,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -157,7 +156,7 @@ public class TreeServlet2 extends HttpServlet {
 		resp.setHeader("Cache-Control", "no-cache");
 		resp.getWriter().write(xmlString);
 		resp.getWriter().close();
-		//System.out.println(xmlString);
+		System.out.println(xmlString);
 		try {
 			printOutXML(xmlString);
 		} catch (ParserConfigurationException e) {
