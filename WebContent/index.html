@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Dynamic Familytree 31.August 2014</title>
+
+ <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+<script src="jquery-1.11.1.js"></script>
+<script src="jquery-ui.js"></script>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="famtree.js"></script>
+<link rel="stylesheet" type ="text/css" href="famtree.css">
+</head>
+<body>
+	<table border=1 align=center cellpadding=10 width=800px>
+		<tr>
+			<td style="background-color: #77FF77" width=80px height=100px>
+				<table cellpadding=10 width=30px>
+
+					<tr>
+						<td><input type="button" value="Create new tree branch"
+							onclick="createForm()"></td>
+					</tr>
+					<tr>
+						<td><input type="button" value="search person "
+							onclick="searchForm()"></td>
+					</tr>
+				</table>
+			</td>
+			<td id="upper_right" rowspan=2>
+
+				<H1>Rolf's Family Tree project Version 1.1</H1> Welcome to my new
+				project and thanks in advance for spending these few minutes, so
+				that I can explain what it is all about. I'd like to create a family
+				tree which shows our relation to our ancestors and to each other. It
+				is as simple as this and its motivated by the fact, that I and my
+				siblings are all spread over southern Germany and Switzerland as
+				well as I realize that my grand-aunts are getting older and older
+				and with some of them already gone, their knowledge about relatives
+				is retrievably gone too. So the intention is to create a big map of
+				relationships and you can contribute to it by simply adding new
+				persons or update existing ones. The data will not be published to
+				anybody besides the family and it resides on my private server.
+				That's all for now -- Try it out !! !
+				<p /> regards Rolf
+			</td>
+		</tr>
+		<tr>
+			<td valign=bottom><input type="text" name="quicksearch"
+				value="search for person" size=15 onkeyup=quickSearch() value="Quicksearch" ></td>
+		</tr>
+		<tr>
+			<td colspan=2>
+				<div id=footer1></div>
+				<div id=footer2></div>
+			</td>
+		</tr>
+	</table>
+	
+	<div id="dialog1"  title="Basic dialog">
+		<table class=mydiag>
+			<tr>
+			<td><input type="text" name="quicksearchindialog" size=15 onkeyup=quickSearchInDialog()></td>
+			<td>Search for person</tr>
+			<tr>
+			<td colspan = 2 id=dfooter2></td>
+		</tr>
+		</table>
+	</div>
+	<div id="dialog2"  title="Create Person">
+		<table class=mydiag>
+			<tr>
+				<td>hello world</td>
+			</tr>
+		</table>
+	</div>
+	
+</body>
+</html>

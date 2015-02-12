@@ -1,0 +1,21 @@
+h1,h2 {
+	color: #0000FF;
+}
+
+
+.chart {
+	background-color: white;
+}
+.textbox {
+	font-size:15px;
+}
+
+.mydiag{
+	font-family: Times New Roman;
+}
+
+.green {
+	color: #009900;
+	background-color: #77FF77;
+	cursor: default;
+}
