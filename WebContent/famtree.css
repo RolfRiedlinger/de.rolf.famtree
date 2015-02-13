@@ -1,5 +1,5 @@
 h1,h2 {
-	color: #0000FF;
+	color: sienna;
 }
 
 
@@ -15,7 +15,18 @@ h1,h2 {
 }
 
 .green {
-	color: #009900;
-	background-color: #77FF77;
+	
+	background-color: sienna;
 	cursor: default;
+}
+.coolmenu{
+width: 150px;
+border: 1px solid black;
+}
+
+.coolmenu td{
+background-color:bisque;
+cursor:hand;
+font-family:Times New Roman;
+
 }

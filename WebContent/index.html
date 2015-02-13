@@ -2,32 +2,31 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Dynamic Familytree 31.August 2014</title>
+<title>Familien Stammbaum 2015</title>
 
  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
 <script src="jquery-1.11.1.js"></script>
 <script src="jquery-ui.js"></script>
-<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="d3.min.js" charset="utf-8"></script>
 <script src="famtree.js"></script>
 <link rel="stylesheet" type ="text/css" href="famtree.css">
 </head>
 <body>
-	<table align=center style="background-color: #f8e8d0" cellpadding=10 width=800px>
+	<table border =1 align=center style="background-color: Wheat" cellpadding=10 width=800px>
+		<tr> <td colspan=2><H1 align=center>Familien Stammbaum</H1></td> 
 		<tr>
-			<td style="background-color: #f8e8d0" width=80px height=100px>
-				<table cellpadding=10 width=30px>
+			<td width=80px height=100px>
+				<table class=coolmenu cellpadding=10>
 
 					<tr>
-						<td><input type="button" value="Create new tree branch"
-							onclick="createForm()"></td>
+						<td  onmouseover="movein(this)" onmouseout="moveout(this)" onclick="createForm()">Neuer Zweig</td>
 					</tr>
 					<tr>
-						<td><input type="button" value="search person "
-							onclick="searchForm()"></td>
+						<td onmouseover="movein(this)" onmouseout="moveout(this)" onclick="searchForm()">Personensuche</td>
 					</tr>
 				</table>
 			</td>
-			<td id="upper_right" style="background-color: #f8e8d0" rowspan=2>
+			<td id="upper_right" rowspan=2>
 
 				<H1>Rolf's Family Tree project Version 1.1</H1> Welcome to my new
 				project and thanks in advance for spending these few minutes, so
@@ -50,7 +49,8 @@
 				value="search for person" size=15 onkeyup=quickSearch() value="Quicksearch" ></td>
 		</tr>
 		<tr>
-			<td colspan=2>
+		<td width = 150px></td>
+			<td>
 				<div id=footer1></div>
 				<div id=footer2></div>
 			</td>

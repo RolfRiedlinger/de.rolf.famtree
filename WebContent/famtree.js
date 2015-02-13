@@ -18,14 +18,14 @@ var createAttribute = [ "PRENAME", "SURNAME", "BIRTHDAY", "LASTPROFESSION" ];
 // improvement. 
 
 var margin = {
-	top : 40,
-	left : 10,
+	top : 80,
+	left : 40,
 	bottom : 40,
-	right : 10
+	right : 40
 };
 
-var width = 500 - margin.left - margin.right;
-var height = 500 - margin.top - margin.bottom;
+var width = 600 - margin.left - margin.right;
+var height = 400 - margin.top - margin.bottom;
 var fontSize = 15;
 
 var req;  // req variable for the http communication
@@ -49,7 +49,7 @@ var listOfPerson = {
 		return this._listOfPerson[index];
 	},
 	toTable : function(styleAttribute) {
-		var tableString = "<table border = 2 cellpaddding = 10>";
+		var tableString = "<table border = 2 cellpaddding = 10 align=center>";
 		tableString += personListHeader();
 		
 		for (var i = 0; i < this._listOfPerson.length; i++){
@@ -173,6 +173,15 @@ var Person = function(node1) {
 	if (xx.length > 0)
 		this["mother"] = new Person(xx[0]);
 };
+// empty Person constructor
+// constructs an empty person for the showbranch view
+// in case mother and father of a branch are not defined 
+var emptyPerson = function (){
+	for(key in attribute)
+		this[key]="AAA";
+	console.log(this);
+};
+
 //--------------------------------------------------------------------------------------------
 //Aux function: Http Request initialisation
 //--------------------------------------------------------------------------------------------
@@ -185,6 +194,17 @@ function init() {
 	var url = "/de.rolf.famtree/TreeServlet2";
 	req.open("POST", url, true);
 	req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+}
+
+//--------------------------------------------------------------------------------------------
+//Aux function: HTML content : menu move in and out + help text 
+//--------------------------------------------------------------------------------------------
+function movein(which){
+which.style.background='sienna';
+}
+
+function moveout(which){
+which.style.background='bisque';
 }
 
 //--------------------------------------------------------------------------------------------
@@ -339,7 +359,22 @@ function createEntry() {
 	}
 
 	init();
-	req.onreadystatechange = personList;
+	// Schreib doch die callback function hier rein 
+	req.onreadystatechange = function () {
+		// Callbackfunktion für create 
+		// Suche qualifizieren, zurück
+		// die XML response des http requests wird geparsed
+		// und die Resultatliste der Personen aufgebaut.
+		// Das Ergebnis wird als Tabelle unten hingeschrieben.
+		// danach wird die Onclick Aktion gesetzt.
+		// neu: rufe das showbranch auf
+		processXMLResponse();
+		var footer = $("#footer2");
+		footer.html(listOfPerson.toTable("updateClass"));
+		setPersonOnClick();
+		showBranch(0);
+	};
+personList;
 	req.send(query);
 
 }
@@ -473,7 +508,7 @@ function createPanel(panel, person){
 	.attr("height",person.anchor.height)
 	.attr("rx", 10)
 	.attr("ry", 5)
-	.attr("fill", "steelblue");
+	.attr("fill", "Darkgreen");
 
 var textbox = panel.append("g")   // textbox hinzufügen
 	  	.attr("transform", "translate("+fontSize+","+(fontSize*2)+")") // Schade dass hier nicht em als Einheit genommen werden kann 
@@ -500,11 +535,10 @@ function showBranch(pos) {
 	var holder = d3.select("#upper_right") // select the 'upper right' element
 	.append("svg") // Grafik Element in upper_right platzieren
 	.attr("width", width + margin.left + margin.right).attr("height",
-			height + margin.top + margin.bottom).attr("class", "chart").append(
-			"g") // im Grafik element eine Gruppe platzieren, dieses wird an
+			height + margin.top + margin.bottom).attr("class", "chart")
+	.append("g") // im Grafik element eine Gruppe platzieren, dieses wird an
 					// holder zurückgegeben
 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 	var panel = holder.append("g"); // eine weitere Gruppe definieren, dass ist
 									// das panel mit dem Text
 
@@ -519,17 +553,42 @@ function showBranch(pos) {
 	anchor.y = 0.67 * height - anchor.height / 2;
 	person.anchor = anchor;
 	createPanel(panel, person);
-	if(person.father != null){
-		panel = holder.append("g");
-		person.father.anchor = new Anchor(0,0,person.father);
-		createPanel(panel, person.father);
+
+	if(person.father == undefined){
+		person.father = new emptyPerson();
+		person.father.PRENAME="unbekannt";
+		person.father.SURNAME="";
+		person.father.LASTPROFESSION="anklicken";
 	}
-	if(person.mother != null){
-		panel = holder.append("g");
-		person.mother.anchor = new Anchor(0,0,person.mother);
-		person.mother.anchor.x = width-person.mother.anchor.width;
-		createPanel(panel, person.mother);
+	panel = holder.append("g");
+	person.father.anchor = new Anchor(0,0,person.father);
+	panel.append("text")
+		.attr("dx", anchor.width/2)
+		.attr("dy", -10)
+		.attr("font-style", "italic")
+		.attr("text-anchor", "middle")
+		.text("Vater");
+	
+	createPanel(panel, person.father);
+
+	if(person.mother == undefined){
+		person.mother = new emptyPerson();
+		person.mother.PRENAME="unbekannt";
+		person.mother.SURNAME="";
+		person.mother.LASTPROFESSION="anklicken";
 	}
+	panel = holder.append("g");
+	person.mother.anchor = new Anchor(0,0,person.mother);
+	person.mother.anchor.x = width-person.mother.anchor.width;
+	createPanel(panel, person.mother);
+	panel.append("text")
+	.attr("dx", anchor.width/2)
+	.attr("dy", -10)
+	.attr("font-style", "italic")
+	.attr("text-anchor", "middle")
+	.text("Mutter");
+
+	
 	holder.append("polyline")
 	.style("stroke","grey")
 	.style("fill", "none")
