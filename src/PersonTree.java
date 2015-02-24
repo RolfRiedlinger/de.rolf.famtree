@@ -111,11 +111,13 @@ public class PersonTree {
 			ResultSet rs = stmt.executeQuery(sql);
 
 			while (rs.next()) {
-				Person myPerson = new Person(rs);
+				// Person myPerson = new Person(rs);
+				Person myPerson = new Person(rs,con);
 				searchresult.add(myPerson);
 			}
 			// get father and mother values
 			for (Person item : searchresult) {
+				/*
 				String fatherId = AttributeNames.A7.getName();
 				if (item.getProperty(fatherId) != null) {
 					sql = "Select * from MASTERTABLE where ID='"
@@ -123,10 +125,10 @@ public class PersonTree {
 					System.out.println(sql);
 					rs = stmt.executeQuery(sql);
 					while (rs.next()) {
-						item.setFather(rs);
-						// System.out.println("HERE: "+ item.toXMLString());
+						item.setFather(rs);						
 					}
 				}
+				*/
 				String motherId = AttributeNames.A8.getName();
 				if (item.getProperty(motherId) != null) {
 					sql = "Select * from MASTERTABLE where ID='"

@@ -136,9 +136,10 @@ public class TreeServlet2 extends HttpServlet {
 		String xmlString = "";
 		Iterator<Person> it = myList.iterator();
 		while (it.hasNext()) {
-
+			xmlString +="<person>";
 			Person myPerson = it.next();
 			xmlString += myPerson.toXMLString();
+			xmlString += "</person>"; 
 		}
 
 		return xmlString;

@@ -23,7 +23,7 @@
 					</tr>
 					<tr>
 						<td onmouseover="movein(this)" onmouseout="moveout(this)" onclick="searchForm()">Personensuche</td>
-					</tr>
+					</tr>					
 				</table>
 			</td>
 			<td id="upper_right" rowspan=2>
@@ -45,11 +45,11 @@
 			</td>
 		</tr>
 		<tr>
-			<td valign=bottom><input type="text" name="quicksearch"
+			<td valign=bottom>Schnellsuche<input type="text" name="quicksearch"
 				value="search for person" size=15 onkeyup=quickSearch() value="Quicksearch" ></td>
 		</tr>
 		<tr>
-		<td width = 150px></td>
+		<td width = 150px><div id="menu2"></div> </td>
 			<td>
 				<div id=footer1></div>
 				<div id=footer2></div>
@@ -58,22 +58,20 @@
 	</table>
 	
 	<div id="dialog1"  title="Basic dialog">
-		<table class=mydiag>
-			<tr>
-			<td><input type="text" name="quicksearchindialog" size=15 onkeyup=quickSearchInDialog()></td>
-			<td>Search for person</tr>
-			<tr>
-			<td colspan = 2 id=dfooter2></td>
-		</tr>
-		</table>
+		<div id=dialog1top></div>
+		<div id=dialog1bottom></div>
 	</div>
-	<div id="dialog2"  title="Create Person">
-		<table class=mydiag>
-			<tr>
-				<td>hello world</td>
-			</tr>
-		</table>
+	<div id="dialog2"  title="Create Person"></div>
+	<div id="dialog3"  title="Basic dialog">
+		<div id=dialog3top></div>
+		<div id=dialog3bottom></div>
 	</div>
+	<div id="dialog4"  title="Basic dialog">
+		<div id=dialog4top></div>
+		<div id=dialog4bottom></div>
+	</div>
+	
+	
 	
 </body>
 </html>
