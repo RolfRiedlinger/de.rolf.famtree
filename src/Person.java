@@ -3,11 +3,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
-
-import com.mysql.jdbc.Connection;
 
 public class Person {
 	
@@ -16,7 +15,9 @@ public class Person {
 	
     private Person father=null;
     private Person mother=null;
-	
+    private List <Person> children = null; 
+    private List <Person> partner =null;
+    	
 	public Person(){
 	  myPerson	= new Properties();
 	  
@@ -72,52 +73,7 @@ public class Person {
 		}
 	}
 
-	// das wird der Konstruktor, um die ganze Vorfahrenkette zu holen. 
-	public Person(ResultSet rs,  java.sql.Connection con ) throws SQLException {
-		// TODO Auto-generated constructor stub
-		myPerson = new Properties();
-		personId = new Properties ();
-		
-		try {
-			if (rs.getString("ID") != null)
-				personId.setProperty("ID",rs.getString("ID"));
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		for (AttributeNames aName : AttributeNames.values()){
-			String tmpName =  aName.getName();
-			try {
-				if (rs.getString(tmpName) != null){
-					myPerson.setProperty(tmpName,rs.getString(tmpName));
-				}
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		String father_id= null;
-		try {
-			father_id = rs.getString("FATHER_ID");
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		if (father_id != null) {
-			String sql = "Select * from MASTERTABLE where ID='"
-					+ father_id + "'";
-			Statement stmt = con.createStatement();
-			System.out.println(sql);
-			ResultSet rs2 = stmt.executeQuery(sql);
-			while (rs2.next()) {
-					this.father= new Person (rs2,con);	
-			}
-		}
-	}
-
-
+	
 	public String toXMLString() throws IOException {
 		
 		String xmlString = "<description>"; 
@@ -135,14 +91,28 @@ public class Person {
 			xmlString += "</FATHER>";
 		}
 		if(mother != null){
-			xmlString += "<MOTHER><description>"; 
-			xmlString += "<ID>"+ mother.getProperty("ID")+"</ID>";
-			Enumeration<?> pMother = mother.propertyNames();
-			while(pMother.hasMoreElements()){
-				String key = (String)pMother.nextElement();
-				xmlString += "<"+ key+">"+mother.getProperty(key)+"</"+key+">";
+			xmlString += "<MOTHER>"; 
+			xmlString += mother.toXMLString();
+			xmlString += "</MOTHER>";
+			
+		}
+		if(partner != null && !partner.isEmpty()){
+			for (Person key: partner){
+				xmlString += "<PARTNER>"; 
+				xmlString += key.toXMLString();
+				xmlString += "</PARTNER>";
+					
 			}
-			xmlString += "</description></MOTHER>"; 
+		}
+			
+		if(children != null && !children.isEmpty()){
+			for (Person key: children){
+				xmlString += "<CHILD>"; 
+				xmlString += key.toXMLString();
+				xmlString += "</CHILD>";
+					
+			}
+				
 		}
 	
 		return xmlString;
@@ -163,8 +133,8 @@ public class Person {
 		return father;
 	}
 
-	public void setFather(ResultSet rs)  {
-		this.father = new Person(rs);
+	public void setFather(Person person)  {
+		this.father = person;
 				
 	}
 
@@ -172,8 +142,28 @@ public class Person {
 		return mother;
 	}
 
-	public void setMother(ResultSet rs) {
-		this.mother = new Person(rs);
+	public void setMother(Person person) {
+		this.mother = person;
+	}
+
+
+	public List <Person> getChildren() {
+		return children;
+	}
+
+
+	public void setChildren(List <Person> children) {
+		this.children = children;
+	}
+
+
+	public List <Person> getPartner() {
+		return partner;
+	}
+
+
+	public void setPartner(List <Person> partner) {
+		this.partner = partner;
 	}
 	
 	

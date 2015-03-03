@@ -16,6 +16,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 
 
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -55,42 +56,35 @@ public class TreeServlet2 extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		Person myPerson = new Person(request);
-		PersonTree myTree = new PersonTree();
+		ViewControl myControler = new ViewControl();
 
 		String xmlString = "<root>";
 		String type = request.getParameter("type");
 
 		if (type == null) {
-			String msg = "No Type";
-			writeXML(msg);
+			xmlString += writeXML("no type given");
+			xmlString += "</root>";
 			this.writeResponse(response, xmlString);
 			return;
 		}
-
-		if (type.compareTo("g") == 0) {
-			for (AttributeNames aName : AttributeNames.values()) {
-				xmlString += "<attrlabel>" + aName.getLabel() + "</attrlabel>";
-				xmlString += "<attrname>" + aName.getName() + "</attrname>";
-				xmlString += "<attrtype>" + aName.getType() + "</attrtype>";
-			}
-
-		}
-
+		// advanced search
 		if (type.compareTo("a") == 0) {
-			List<Person> myList = myTree.searchPerson(myPerson);
+			List<Person> myList = myControler.searchPerson(myPerson);
 			xmlString += writeXML(myList);
 		}
+		// quicksearch
 		if (type.compareTo("q") == 0) {
-			List<Person> myList = myTree.quickSearchPerson(myPerson);
+			List<Person> myList = myControler.quickSearchPerson(myPerson);
 			xmlString += writeXML(myList);
 		}
+		// create a person
 		if (type.compareTo("c") == 0) {
 			String msg = null;
-			int rc = myTree.createPerson(myPerson);
+			int rc = myControler.createPerson(myPerson);
 			switch (rc) {
 			case 1:
 				msg = "Entry successfully created ! ";
-				List<Person> myList = myTree.searchPerson(myPerson);
+				List<Person> myList = myControler.searchPerson(myPerson);
 				xmlString += writeXML(myList);
 				break;
 			default:
@@ -102,11 +96,11 @@ public class TreeServlet2 extends HttpServlet {
 		}
 		if (type.compareTo("u") == 0) {
 			String msg = null;
-			int rc = myTree.updatePerson(myPerson);
+			int rc = myControler.updatePerson(myPerson);
 			switch (rc) {
 			case 1:
 				msg = "Entry successfully updated ! ";
-				List<Person> myList = myTree.searchPerson(myPerson);
+				List<Person> myList = myControler.searchPerson(myPerson);
 				xmlString += writeXML(myList);
 				break;
 			default:
@@ -116,19 +110,28 @@ public class TreeServlet2 extends HttpServlet {
 			xmlString += writeXML(msg);
 
 		}
+		if(type.compareTo("t") == 0){
+			
+			xmlString +="<person>";
+			Person result = myControler.getAncestorTreeFromDB(myPerson);
+			if(result != null)
+				xmlString += result.toXMLString();
+			xmlString +="</person>";
+			
+		}
+		if(type.compareTo("d") == 0){
+			
+			xmlString +="<person>";
+			Person result = myControler. getDescendantTreeFromDB(myPerson);
+			if(result != null)
+				xmlString += result.toXMLString();
+			xmlString +="</person>";
+			
+		}
+		
+		
 		xmlString += "</root>";
 		this.writeResponse(response, xmlString);
-		/*
-		try {
-			printOutXML(xmlString);
-		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		 */
 		return;
 	}
 
@@ -171,12 +174,16 @@ public class TreeServlet2 extends HttpServlet {
 
 	private void printOutXML(String xmlString)
 			throws ParserConfigurationException, SAXException, IOException {
+	
+		
 		ByteArrayInputStream stream = new ByteArrayInputStream(
-				xmlString.getBytes());
+				xmlString.getBytes("UTF-8"));
 		DocumentBuilder builder = DocumentBuilderFactory.newInstance()
 				.newDocumentBuilder();
 		Document doc = builder.parse(stream);
 		
+		
+
 		
 		Node node = doc.getFirstChild();
 		System.out.println("<"+node.getNodeName()+">");

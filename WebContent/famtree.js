@@ -7,7 +7,8 @@
 // however I like to have the ID displayed. It is the unique identifier of a person entry. 
 var attribute = [ "ID", "PRENAME", "SURNAME", "BIRTHDAY", "LASTMARRIAGE",
 		"LASTPROFESSION" ];
-
+var label =  [ "ID", "Vorname", "Nachname", "Geburtstag", "Heirat",
+       		"Beruf" ];
 // margin: parameter for the <svg> grafics
 // width, height define the grafc area size
 // A person's information is displayed in a rectangle panel.
@@ -67,7 +68,7 @@ var listOfPerson = {
 // branch is defined as a person + its relationsships. Currently implemented are
 // the parents
 // mainPerson = the root person for this branch
-var mainPerson;
+var mainPerson = null;
 
 var MenuData = function() {
 	this.display = false;
@@ -124,7 +125,7 @@ var Person = function(node1) {
 						+ this.ID + " readonly>";
 				temp += "</td>";
 				for (var i = 1; i < attribute.length; i++) {
-					temp += "<tr><td>" + attribute[i]
+					temp += "<tr><td>" + label[i]
 							+ "</td><td><input  class=updateform ";
 					temp += "type=text name=" + attribute[i] + " size=20 + ";
 					temp += "value='" + this[attribute[i]] + "'></td></tr>";
@@ -137,7 +138,7 @@ var Person = function(node1) {
 	this._menu = new MenuData();
 
 	var description = node1.getElementsByTagName("description");
-	if (description.length > 0) {
+	if (description != null && description.length > 0) {
 		for (var j = 0; j < attribute.length; j++) {
 			var xx = description[0].getElementsByTagName(attribute[j]);
 			try {
@@ -147,19 +148,29 @@ var Person = function(node1) {
 				this[attribute[j]] = "";
 			}
 		}
+	}else{
+		console.log("Description not found!! Person not fully created ");
+		return;
 	}
+	
+	// description muss immer da sein, 
+	// als nächstes kann jetzt folgen
+	// <FATHER>, <MOTHER>, <PERSON> oder null. Letzteres ist wenn eine Personen 
+	// description das Ende der response bildet. 
+	var nextTag = description[0].nextSibling;
+	
 
-	var xx = node1.getElementsByTagName("FATHER");
-	if (xx.length > 0){
-		this.father = new Person(xx[0]);
-		this.children = [];  // Das brauche ich für das D3 Treelayout
+	if (nextTag != null && nextTag.nodeName =="FATHER"){
+		this.father = new Person(nextTag); // Hier erfolgt der rekursive Aufruf um das objekt aufzubauen 
+		this.children = [];          	  // children []  brauche ich für das D3 Treelayout
 		this.children[0]= this.father;
+		nextTag = nextTag.nextSibling;  //move to next Tag
 	}
 	else
 		this.father = new EmptyPerson();
-	xx = node1.getElementsByTagName("MOTHER");
-	if (xx.length > 0){
-		this.mother = new Person(xx[0]);
+	
+	if (nextTag !=null && nextTag.nodeName == "MOTHER"){
+		this.mother = new Person(nextTag);
 		if (this.children == undefined){
 			this.children = [];
 			this.children[0] = this.mother;
@@ -169,6 +180,30 @@ var Person = function(node1) {
 	}
 	else
 		this.mother = new EmptyPerson();
+	
+	/// Hier kommt der Parser code wenn der Nachfahren Tree angefragt wurde
+	// Dessen Sturktur kommt als Person -Partner - Child --was alles auf das Children Feld gemappt wird 
+	// 
+	
+	if (nextTag != null && nextTag.nodeName =="PARTNER"){
+		if(this.children == undefined)  
+			this.children = [];  // Brauche ich für die D3 Mimik.
+		var i = 0;
+		while (nextTag != null && nextTag.nodeName =="PARTNER"){
+			this.children[i++] = new Person(nextTag);
+			nextTag = nextTag.nextSibling;  // move to nextTag
+		}
+	}
+	
+	if (nextTag != null && nextTag.nodeName =="CHILD"){
+		if(this.children == undefined)  
+			this.children = [];  // Brauche ich für die D3 Mimik.
+		var i = 0; // children und PArtner schliessen sich aus, daher kannhier der index wieder mit 0 beginnen
+		while (nextTag != null && nextTag.nodeName =="CHILD"){
+			this.children[i++] = new Person(nextTag);
+			nextTag = nextTag.nextSibling;  // move to nextTag
+		}
+	}
 
 };
 // =====================================================================
@@ -206,7 +241,7 @@ var EmptyPerson = function() {
 								temp += "<table>";
 								for (var i = 1; i < attribute.length; i++) {
 									temp += "<tr><td>"
-											+ attribute[i]
+											+ label[i]
 											+ "</td><td><input  class=updateform ";
 									temp += "type=text name=" + attribute[i]
 											+ " size=20 + ";
@@ -262,7 +297,7 @@ function moveout(which) {
 function personListHeader() {
 	var myString = "";
 	for (var i = 0; i < attribute.length; i++) {
-		myString += "<th>" + attribute[i] + "</th>";
+		myString += "<th>" + label[i] + "</th>";
 	}
 	return myString;
 }
@@ -273,13 +308,13 @@ function personListHeader() {
 // --------------------------------------------------------------------------------------------
 function searchForm() {
 
-	var temp = "<H2> Advanced Search Form </H2> <table>";
+	var temp = "<H2> Personensuche </H2> <table>";
 	for (var i = 0; i < attribute.length; i++) {
-		temp += "<tr><td>" + attribute[i] + "</td><td><input type=text name="
+		temp += "<tr><td>" + label[i] + "</td><td><input type=text name="
 				+ attribute[i] + " size=20></td></tr>";
 	}
 	context = "person";
-	temp += '</table><input type=button value=search onclick="advancedSearch()">';
+	temp += '</table><input type=button value=Suche onclick="advancedSearch()">';
 
 	document.getElementById('upper_right').innerHTML = temp;
 
@@ -297,13 +332,13 @@ function createForm() {
 	// the database
 
 	for (var i = 1; i < attribute.length; i++) {
-		temp += "<tr><td>" + attribute[i]
+		temp += "<tr><td>" + label[i]
 				+ "</td><td><input  class=updateform type=text name="
 				+ attribute[i] + " size=20></td></tr>";
 	}
-	temp += '</table><input type=button value=create onclick="createEntry()">';
-	$("#dialog1").html(temp);
-	$("#dialog1").dialog("option", "title", "Create person");
+	temp += '</table>'; // <input type=button value=create onclick="createEntry()">';
+	$("#dialog1top").html(temp);
+	$("#dialog1").dialog("option", "title", "Neue Person anlegen");
 	$("#dialog1").dialog("open");
 
 }
@@ -335,7 +370,7 @@ function editOrCreatePerson(person) {
 function searchInDatabase(person) {
 	person.menu.display = false;
 	var temp = '<input type="text" name="quicksearchindialog" \
-		        value="search for person" size=10 onkeyup=quickSearchInDialog() value="Quicksearch" ></td>';
+		        size=10 onkeyup=quickSearchInDialog() ></td>';
 
 	$("#dialog3top").html(temp);
 	$("#dialog3bottom").html(" ");
@@ -462,42 +497,51 @@ function createEntry() {
 				// von einer Hauptperson ausgeht, deren Details vielleicht nicht
 				// gesetzt sind
 				// deren ID zumindest existiert.
-
-				var query2 = "type=u";
-				// fall 1: vater wurde angelegt: Dann muss die ID, jetzt bei
-				// mainperson einegtragen werden
-				if (mainPerson.father.menu.edit == true) {
-					mainPerson.father.menu.edit = false;
-					query2 += "&" + "FATHER_ID=" + listOfPerson.get(0).ID
-							+ "&ID=" + mainPerson.ID;
-				}
-				// fall 2: vater wurde angelegt: Dann muss die ID, jetzt bei
-				// mainperson einegtragen werden
-				if (mainPerson.mother.menu.edit == true) {
-					mainPerson.mother.menu.edit = false;
-					query2 += "&" + "MOTHER_ID=" + listOfPerson.get(0).ID
-							+ "&ID=" + mainPerson.ID;
-				}
-
-				// call server to update database
-				// Dann das Resultat als mainperson setzen
-				// und showBranch aufrufen
-				init();
-				req.onreadystatechange = function() {
-					if (req.readyState == 4) {
-						// req Status 200 = OK, 404 = page not found
-						if (req.status == 200) {
-							processXMLResponse();
-							var footer = $("#footer2");
-							footer.html(listOfPerson.toTable("updateClass"));
-							setPersonOnClick();
-							mainPerson = listOfPerson.get(0);
-							showBranch();
-						}
+				if(mainPerson != null && (mainPerson.father.menu.edit == true || mainPerson.mother.menu.edit == true ) )	
+				{	
+					var query2 = "type=u";
+					// fall 1: vater wurde angelegt: Dann muss die ID, jetzt bei
+					// mainperson einegtragen werden
+					if (mainPerson.father.menu.edit == true) {
+						mainPerson.father.menu.edit = false;
+						query2 += "&" + "FATHER_ID=" + listOfPerson.get(0).ID
+								+ "&ID=" + mainPerson.ID;
 					}
-				};
-				req.send(query2);
-
+					// fall 2: Mutter wurde angelegt: Dann muss die ID, jetzt bei
+					// mainperson einegtragen werden
+					if (mainPerson.mother.menu.edit == true) {
+						mainPerson.mother.menu.edit = false;
+						query2 += "&" + "MOTHER_ID=" + listOfPerson.get(0).ID
+								+ "&ID=" + mainPerson.ID;
+					}
+	
+					// call server to update database
+					// Dann das Resultat als mainperson setzen
+					// und showBranch aufrufen
+					init();
+					req.onreadystatechange = function() {
+						if (req.readyState == 4) {
+							// req Status 200 = OK, 404 = page not found
+							if (req.status == 200) {
+								processXMLResponse();
+								var footer = $("#footer2");
+								footer.html(listOfPerson.toTable("updateClass"));
+								setPersonOnClick();
+								mainPerson = listOfPerson.get(0);
+								showBranch();
+							}
+						}
+					};
+					req.send(query2);
+				}
+				else
+					{
+					var footer = $("#footer2");
+					footer.html(listOfPerson.toTable("updateClass"));
+					setPersonOnClick();
+					mainPerson = listOfPerson.get(0);
+					showBranch();
+					}	
 			} // end of create callback status 200
 		} // end of create callback status 4
 	}; // end of callback for create person
@@ -705,29 +749,138 @@ function showMenu(){
 				<tr><td onmouseover="movein(this)" onmouseout="moveout(this)" onclick=\
 				"searchForm()">Vorfahren als Schalen anzeigen</td></tr>\
 				<tr><td onmouseover="movein(this)" onmouseout="moveout(this)" onclick=\
-				"searchForm()">Nachfahren als Baum  zeigen</td></tr></table>';
+				"descendantTree()">Nachfahren als Baum  zeigen</td></tr></table>';
 	$("#menu2").html(temp);
 	
 	
 };
 
-var PersonR = function(name,surname,birthday,profession){
-	this.name = name;
-	this.surname = surname;
-	this.birthday = birthday;
-	this.profession = profession;
+function descendantTree(){
 	
-};
+	var query = "type=d&ID="+mainPerson.ID;
+	init();
+	req.onreadystatechange = function (){
+		processXMLResponse();
+		var footer = $("#footer2");
+		footer.html(listOfPerson.toTable("updateClass"));
+		mainPerson = listOfPerson.get(0);
+		setPersonOnClick();
+		displayDescendantTree();
+	};
+	req.send(query);
+
+}
 
 function ancestorTree(){
+		
+		var query = "type=t&ID="+mainPerson.ID;
+		init();
+		req.onreadystatechange = function (){
+			processXMLResponse();
+			var footer = $("#footer2");
+			footer.html(listOfPerson.toTable("updateClass"));
+			mainPerson = listOfPerson.get(0);
+			setPersonOnClick();
+			displayAncestorTree();
+		};
+		req.send(query);
+
+	}
+
+function displayDescendantTree(){
+	
+	
+	d3.select("#dialog4top") // select the 'dialog4' element
+			.selectAll("svg")
+			.remove();
+	
+	var width = 2000 - margin.right - margin.left;
+	var height =1500 - margin.top - margin.bottom;
+	 
+	var i = 0;
+
+	var tree = d3.layout.tree()
+	 .size([width, height]);
+
+	var diagonal = d3.svg.diagonal()
+	 .projection(function(d) { return [d.x, d.y]; });
+	
+	var svg = d3.select("#dialog4top").append("svg")
+	 		.attr("width", width + margin.right + margin.left)
+	 		.attr("height", height + margin.top + margin.bottom)
+	 		.append("g")
+	 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	root = mainPerson; 
+	
+	  // Compute the new tree layout.
+	  var nodes = tree.nodes(root).reverse(),
+	   links = tree.links(nodes);
+
+	  // Normalize for fixed-depth.
+	  nodes.forEach(function(d) { d.y = d.depth * 200; });
+
+	  // Declare the nodes
+	  var node = svg.selectAll("g.node")
+	   .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+	  // Enter the nodes.
+	  var nodeEnter = node.enter().append("g")
+	   .attr("class", "node")
+	   .attr("fill","white")
+	   .attr("transform", function(d) { 
+	    return "translate(" + (d.x-50) + "," + (d.y) + ")"; });
+
+	  nodeEnter.append("rect") // attach a rectangle
+		.attr("width", 100)
+		.attr("height",100)
+		.attr("rx", 10)
+		.attr("ry", 10)
+		.attr("fill", "Darkgreen");
+
+	  nodeEnter.append("text")
+	   .attr("dy", "2em")
+	   .attr("dx", 50)
+	   .attr("text-anchor", "middle")
+	   .text(function(d) { return d.PRENAME; })
+	   .style("fill-opacity", 1);
+	  nodeEnter.append("text")
+	  .attr("dy", "3em")
+	  .attr("dx", 50)
+	  .attr("text-anchor", "middle")
+	  .text(function(d) { return d.SURNAME; })
+	  .style("fill-opacity", 1);
+	  nodeEnter.append("text")
+	  .attr("dy", "4.5em")
+	  .attr("dx", 50)
+	  .attr("text-anchor", "middle")
+	  .text(function(d) { return d.BIRTHDAY; })
+	  .style("fill-opacity", 1);
+	
+
+	  // Declare the links
+	  var link = svg.selectAll("path.link")
+	   .data(links, function(d) { return d.target.id; });
+
+	  // Enter the links.
+	  link.enter().insert("path", "g")
+	   .attr("class", "link")
+	   .attr("d", diagonal);
+
+	  $("#dialog4").dialog("option", "title", "Baum der Nachfahren");
+	  $("#dialog4").dialog("open");
+}
+
+
+function displayAncestorTree(){
 	
 		
 	d3.select("#dialog4top") // select the 'dialog4' element
 			.selectAll("svg")
 			.remove();
 	
-	var width = 1000 - margin.right - margin.left;
-	var height =1000 - margin.top - margin.bottom;
+	var width = 2000 - margin.right - margin.left;
+	var height =1500 - margin.top - margin.bottom;
 	 
 	var i = 0;
 
@@ -759,6 +912,7 @@ function ancestorTree(){
 	  // Enter the nodes.
 	  var nodeEnter = node.enter().append("g")
 	   .attr("class", "node")
+	   .attr("fill","white")
 	   .attr("transform", function(d) { 
 	    return "translate(" + (d.x-75) + "," + (height-d.y-100) + ")"; });
 
@@ -767,7 +921,7 @@ function ancestorTree(){
 		.attr("height",100)
 		.attr("rx", 10)
 		.attr("ry", 10)
-		.attr("fill", "steelblue");
+		.attr("fill", "Darkgreen");
 
 	  nodeEnter.append("text")
 	   .attr("dy", "2em")
@@ -787,13 +941,7 @@ function ancestorTree(){
 	  .attr("text-anchor", "middle")
 	  .text(function(d) { return d.BIRTHDAY; })
 	  .style("fill-opacity", 1);
-	  nodeEnter.append("text")
-	  .attr("dy", "5.5em")
-	  .attr("dx", 75)
-	  .attr("text-anchor", "middle")
-	  .text(function(d) { return d.id; })
-	  .style("fill-opacity", 1);
-
+	
 
 	  // Declare the links
 	  var link = svg.selectAll("path.link")
@@ -804,7 +952,7 @@ function ancestorTree(){
 	   .attr("class", "link")
 	   .attr("d", diagonal);
 
-	  
+	  $("#dialog4").dialog("option", "title", "Baum der Vorfahren");
 	  $("#dialog4").dialog("open");
 }
 
