@@ -990,21 +990,27 @@ function appendMenu(panel, person) {
 	// der Schatten des Menüs ist um 55px verschoben
 	// Wenn das nicht geht, wird das Menü nach links unten verschoben
 	var dx = 50;
+	var dy = 50;
 	if (person.anchor.x + person.anchor.width + 55 >= width)
 		dx = -50;
 	// Zuerst den Schatten einfügen
 	// er ist nochmal um 5 nach rechts und nach unten veschoben
-	panel.append("rect").attr("class", "panel").attr("width", 220).attr(
-			"height", person.anchor.height).attr("x", dx + 5).attr("y", 55)
+	var group = panel.append("g")
+	.attr("id", "gmenu")
+	.attr("transform","translate(" + dx + "," + dy + ")");
+
+	
+	group.append("rect").attr("class", "panel").attr("width", 220).attr(
+			"height", person.anchor.height).attr("x", + 5).attr("y", 5)
 			.attr("fill", "grey");
 	// Jetzt das Menü panel einfügen
-	panel.append("rect").attr("class", "panel").attr("width", 220).attr(
-			"height", person.anchor.height).attr("x", dx).attr("y", 50).attr(
-			"fill", "sienna");
+	group.append("rect").attr("class", "panel").attr("width", 220)
+			.attr("height", person.anchor.height)
+			.attr("fill", "sienna");
 	// Hier kommt die Textbox für das Menü
 	// Schade dass hier nicht em als Einheit genommen werden kann
-	var textbox = panel.append("g").attr("class", "menu").attr("transform",
-			"translate(" + (dx + fontSize) + "," + (50 + fontSize * 2) + ")")
+	var textbox = group.append("g").attr("class", "menu").attr("transform",
+			"translate(" + (fontSize) + "," + (fontSize * 2) + ")")
 
 	.style("font-size", fontSize + "px").style("fill", "white");
 	// Für die erste Menuezeile wird das Hintergrundrechteck eingefügt
@@ -1050,10 +1056,10 @@ function appendMenu(panel, person) {
 	// hier kommt der text mit den highlight Functionen mouseover und mouseout
 	textbox.append("text").style("cursor", "pointer").attr("dy", "4.0em").text(
 			"Zweig dieser Person bearbeiten")
-	/*
-	 * .on("mouseover", function() { person.menu.search = true; showBranch();
-	 * }).on("mouseout", function() { person.menu.search = false; showBranch(); })
-	 */
+	
+	  // .on("mouseover", movein(this))
+	  // .on("mouseout", moveout(this))
+	
 	.on("click", function() {
 		person.menu.branch = true;
 		thisPerson2Main(person);
@@ -1069,21 +1075,26 @@ function appendMainPersonMenu(panel, person) {
 	// der Schatten des Menüs ist um 55px verschoben
 	// Wenn das nicht geht, wird das Menü nach links unten verschoben
 	var dx = 50;
+	var dy = 50;
 	if (person.anchor.x + person.anchor.width + 55 >= width)
 		dx = -50;
 	// Zuerst den Schatten einfügen
 	// er ist nochmal um 5 nach rechts und nach unten veschoben
-	panel.append("rect").attr("class", "panel").attr("width", 220).attr(
-			"height", person.anchor.height).attr("x", dx + 5).attr("y", 55)
+	var group = panel.append("g")
+					.attr("id", "gmenu")
+					.attr("transform","translate(" + dx + "," + dy + ")");
+	
+	group.append("rect").attr("class", "panel").attr("width", 220).attr(
+			"height", person.anchor.height).attr("x", 5).attr("y", 5)
 			.attr("fill", "grey");
 	// Jetzt das Menü panel einfügen
-	panel.append("rect").attr("class", "panel").attr("width", 220).attr(
-			"height", person.anchor.height).attr("x", dx).attr("y", 50).attr(
-			"fill", "sienna");
+	group.append("rect").attr("class", "panel").attr("width", 220)
+			.attr("height", person.anchor.height)
+			.attr("fill", "sienna");
 	// Hier kommt die Textbox für das Menü
 	// Schade dass hier nicht em als Einheit genommen werden kann
-	var textbox = panel.append("g").attr("class", "menu").attr("transform",
-			"translate(" + (dx + fontSize) + "," + (50 + fontSize * 2) + ")")
+	var textbox = group.append("g").attr("class", "menu").attr("transform",
+			"translate(" + (fontSize) + "," + (fontSize * 2) + ")")
 
 	.style("font-size", fontSize + "px").style("fill", "white");
 	// Für die erste Menuezeile wird das Hintergrundrechteck eingefügt
@@ -1141,8 +1152,16 @@ function createPanel(panel, person) {
 				var temp = person.menu.display;
 				resetMenuData();
 				person.menu.display = !temp;
-				showBranch();
-			}).attr("fill", "Darkgreen");
+				// remove menus
+				d3.selectAll("#gmenu")
+					.remove();
+				if(person.menu.display == true){
+					if(person == mainPerson)
+						appendMainPersonMenu(panel, mainPerson);
+					else
+						appendMenu(panel, person);
+				}
+	 }).attr("fill", "Darkgreen");
 
 	var textbox = panel.append("g") // textbox hinzufügen
 	.attr("transform", "translate(" + fontSize + "," + (fontSize * 2) + ")") // Schade
@@ -1233,26 +1252,15 @@ function showBranch() {
 	// Panel für die Hauptperson
 	var panel = holder.append("g");
 	createPanel(panel, mainPerson);
-	if (mainPerson.menu.display == true) {
-		appendMainPersonMenu(panel, mainPerson);
-	}
-
 	// Panel für den Vater der Person
 	panel = holder.append("g");
 	createPanel(panel, mainPerson.father);
-	if (mainPerson.father.menu.display == true) {
-		appendMenu(panel, mainPerson.father);
-	}
 	// Überschrift "Vater" setzen
 	panel.append("text").attr("dx", anchor.width / 2).attr("dy", -10).attr(
 			"font-style", "italic").attr("text-anchor", "middle").text("Vater");
-
 	panel = holder.append("g");
 	createPanel(panel, mainPerson.mother);
-	if (mainPerson.mother.menu.display == true) {
-		appendMenu(panel, mainPerson.mother);
-	}
-	// Überschirft "Mutter"
+	// Überschrift "Mutter"
 	panel.append("text").attr("dx", anchor.width / 2).attr("dy", -10).attr(
 			"font-style", "italic").attr("text-anchor", "middle")
 			.text("Mutter");
