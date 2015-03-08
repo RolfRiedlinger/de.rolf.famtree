@@ -247,10 +247,10 @@ public class ViewControl {
 		Person person = null;
 		List <Person> partner = new ArrayList<Person>();    // Das ist die Liste der Partner der aktuellen (Haupt)-Person 	
 		List <String> childIds = null;                      // Das ist die Liste der childIds pro Partner . Ich speichere diese zwischen
-		List <Person> children = new ArrayList<Person>();   // Das ist die Liste der Kinder als Personen, siewerden rekursiv generiert.
+		List <Person> children = new ArrayList<Person>();   // Das ist die Liste der Kinder als Personen, sie werden rekursiv generiert.
 		HashMap <Person,List<String>> myHash = new HashMap<Person, List<String>>(); // Das ist eine Hashmap um die Liste der childIds pro Partner zu speichern
 		
-		// startder datenbank Operationen mit trycatch umgeben. 
+		// start der datenbank Operationen mit try catch umgeben. 
 		try {
 			Context initContext = new InitialContext();
 			DataSource ds = (DataSource) initContext
