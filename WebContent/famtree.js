@@ -9,7 +9,7 @@ var attribute = [ "ID", "PRENAME", "SURNAME", "BIRTHDAY", "LASTMARRIAGE",
 var label = [ "ID", "Vorname", "Nachname", "Geburtstag", "Heirat", "Beruf" ];
 // margin: parameter for the <svg> grafics
 var margin = {
-	top : 80,
+	top : 40,
 	left : 40,
 	bottom : 40,
 	right : 40
@@ -18,7 +18,7 @@ var margin = {
 // currently hard coded to 600x400 - margins.
 // fontsize is used to compute the panel width and height 
 var width = 600 - margin.left - margin.right;
-var height = 400 - margin.top - margin.bottom;
+var height = 600 - margin.top - margin.bottom;
 var fontSize = 15;
 
 
@@ -227,6 +227,10 @@ var Person = function(node1,level) {
 			this.children[1] = this.mother;
 	} else
 		this.mother = new EmptyPerson();
+	
+	
+	// Hier kommt der aktuelle Partner rein 
+	this.partner = new EmptyPerson();
 
 	// / Hier kommt der Parser code wenn der Nachfahren Tree angefragt wurde
 	// Dessen Struktur kommt als Person -Partner - Child --was alles auf das
@@ -1016,19 +1020,12 @@ function displayAncestorTree() {
 //
 // Konstruktor für das Anchor Objekt
 //
-var Anchor = function(x, y, person) {
+var Anchor = function(x, y, width, height) {
 
 	this.x = x;
 	this.y = y;
-	var maxLen = 20;
-
-	/*
-	 * for (var i = 0; i < attribute.length; i++) { if
-	 * (person[attribute[i]].length > maxLen) maxLen =
-	 * person[attribute[i]].length; }
-	 */
-	this.width = maxLen * fontSize * .5;
-	this.height = (4 + 3.4) * fontSize;
+	this.width = width; 
+	this.height = height;
 };
 // --------------------------------------------------------------------------------------------
 // Aux function: D3 grafics, Append Menu
@@ -1244,15 +1241,13 @@ function showBranch() {
 	// Anchorpoints und Maße ausrechnen für die Linien
 	// und für die Platzierung der Panels
 
-	var anchor = new Anchor(0, 0, mainPerson);
-	anchor.x = 0.5 * width - anchor.width / 2;
-	anchor.y = 0.67 * height - anchor.height / 2;
-	mainPerson.anchor = anchor;
-
-	mainPerson.father.anchor = new Anchor(0, 0, mainPerson.father);
-
-	mainPerson.mother.anchor = new Anchor(0, 0, mainPerson.mother);
-	mainPerson.mother.anchor.x = width - mainPerson.mother.anchor.width;
+	var panelWidth = 20 * fontSize * .5;
+	var panelHeight= (4 + 3.4) * fontSize;
+	
+	mainPerson.anchor =  new Anchor(0.5 * width, 0.4 * height - panelHeight / 2, panelWidth, panelHeight);
+	mainPerson.father.anchor = new Anchor(panelWidth, panelHeight/2, panelWidth, panelHeight);
+	mainPerson.mother.anchor = new Anchor(width-panelWidth, panelHeight/2, panelWidth, panelHeight);
+	mainPerson.partner.anchor = new Anchor(0.5 * width-panelWidth/2, 0.4 * height + panelHeight, panelWidth, panelHeight);
 
 	// Hier die Linien zeichnen, damit sie unter den Menu panels liegen
 	// ==================================================================
@@ -1262,38 +1257,32 @@ function showBranch() {
 			.style("fill", "none")
 			.attr(
 					"points",
-					(mainPerson.father.anchor.x + mainPerson.father.anchor.width)
+					(mainPerson.father.anchor.x)+ ","+ (mainPerson.father.anchor.y)
 							+ ","
-							+ (mainPerson.father.anchor.y + mainPerson.father.anchor.height / 2)
+							+ (mainPerson.anchor.x-10) + "," + (mainPerson.father.anchor.y)
 							+ ","
-							+ (mainPerson.anchor.x + mainPerson.anchor.width
-									/ 2 - 10)
-							+ ","
-							+ (mainPerson.father.anchor.y + mainPerson.father.anchor.height / 2)
-							+ ","
-							+ (mainPerson.anchor.x + mainPerson.anchor.width
-									/ 2 - 10) + "," + mainPerson.anchor.y);
+							+ (mainPerson.anchor.x-10) + "," + mainPerson.anchor.y);
 	holder
 			.append("polyline")
 			.style("stroke", "grey")
 			.style("fill", "none")
 			.attr(
 					"points",
-					(mainPerson.mother.anchor.x)
+					(mainPerson.mother.anchor.x) + ","+ (mainPerson.mother.anchor.y)
 							+ ","
-							+ (mainPerson.mother.anchor.y + mainPerson.mother.anchor.height / 2)
+							+ (mainPerson.anchor.x+10)+ ","	+ (mainPerson.mother.anchor.y)
 							+ ","
-							+ (mainPerson.anchor.x + mainPerson.anchor.width
-									/ 2 + 10)
-							+ ","
-							+ (mainPerson.mother.anchor.y + mainPerson.mother.anchor.height / 2)
-							+ ","
-							+ (mainPerson.anchor.x + mainPerson.anchor.width
-									/ 2 + 10) + "," + mainPerson.anchor.y);
+							+ (mainPerson.anchor.x+ 10) + "," + mainPerson.anchor.y);
 
 	// Jetzt die panels zeichnen für Person, vater und Mutter
 	// falls menu == true ist, dann auch menue zeichnen
 	// =================================================================
+	// Anker korrigieren
+	mainPerson.father.anchor.x = 0;
+	mainPerson.father.anchor.y = 0;
+	mainPerson.mother.anchor.y = 0;
+	mainPerson.anchor.x -= panelWidth/2;
+		
 	// Panel für die Hauptperson
 	var panel = holder.append("g");
 	createPanel(panel, mainPerson);
@@ -1301,15 +1290,21 @@ function showBranch() {
 	panel = holder.append("g");
 	createPanel(panel, mainPerson.father);
 	// Überschrift "Vater" setzen
-	panel.append("text").attr("dx", anchor.width / 2).attr("dy", -10).attr(
+	panel.append("text").attr("dx", panelWidth / 2).attr("dy", -10).attr(
 			"font-style", "italic").attr("text-anchor", "middle").text("Vater");
 	panel = holder.append("g");
 	createPanel(panel, mainPerson.mother);
 	// Überschrift "Mutter"
-	panel.append("text").attr("dx", anchor.width / 2).attr("dy", -10).attr(
+	panel.append("text").attr("dx", panelWidth / 2).attr("dy", -10).attr(
 			"font-style", "italic").attr("text-anchor", "middle")
 			.text("Mutter");
-
+	panel = holder.append("g");
+	createPanel(panel, mainPerson.partner);
+	// Überschrift "Partner"
+	panel.append("text").attr("dx", panelWidth / 2).attr("dy", -10).attr(
+			"font-style", "italic").attr("text-anchor", "middle")
+			.text("Partner");
+	
 }
 
 // --------------------------------------------------------------------------------------------
