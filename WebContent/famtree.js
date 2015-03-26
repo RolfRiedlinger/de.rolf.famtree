@@ -361,14 +361,14 @@ function searchForm() {
 // --------------------------------------------------------------------------------------------
 function createForm() {
 
-	$("#upper_right").html("");
+	// $("#upper_right").html("");
 	$("#dialog1bottom").html("");
 
 	var temp = "<table>";
 	
 	// Create fields for the attributes: 
 	// The first Element is the ID field - we skip this , the id is defined by
-	// the database
+
 	for (var i = 1; i < attribute.length; i++) {
 		temp += "<tr><td>" + label[i]
 				+ "</td><td><input  class=updateform type=text name="
@@ -376,8 +376,14 @@ function createForm() {
 	}
 	temp += '</table>'; // <input type=button value=create
 						// onclick="createEntry()">';
+
 	$("#dialog1top").html(temp);
 	$("#dialog1").dialog("option", "title", "Neue Person anlegen");
+	$( "#dialog1" ).dialog( "option", "buttons", { 
+		 "Person anlegen": function() { createEntry(); $(this).dialog("close"); } 
+		} );
+	
+
 	$("#dialog1").dialog("open");
 
 }
@@ -387,6 +393,7 @@ function createForm() {
 // --------------------------------------------------------------------------------------------
 function editOrCreatePerson(person) {
 
+
 	// wenn empty Person, call the create Person Dialog
 	if (person.ID == " ") {
 		createForm();
@@ -394,9 +401,13 @@ function editOrCreatePerson(person) {
 
 	// otherwise , prepare dialog for person's update
 	else {
-		$("#dialog2").html(person.toForm());
-		$("#dialog2").dialog("option", "title", "Person Bearbeiten");
-		$("#dialog2").dialog("open");
+		$("#dialog1top").html(person.toForm());
+		$("#dialog1bottom").html("");
+		$("#dialog1").dialog("option", "title", "Person Bearbeiten");
+		$( "#dialog1" ).dialog( "option", "buttons", { 
+			 "Daten abschicken": function() {updateEntry(); $(this).dialog("close"); } 
+			} );
+		$("#dialog1").dialog("open");
 	}
 }
 // --------------------------------------------------------------------------------------------
@@ -408,12 +419,39 @@ function searchInDatabase(person) {
 	var temp = '<input type="text" name="quicksearchindialog" \
 		        size=10 onkeyup=quickSearchInDialog() ></td>';
 
-	$("#dialog3top").html(temp);
-	$("#dialog3bottom").html(" ");
-	$("#dialog3").dialog("option", "title", "Person in Datenbank suchen");
-	$("#dialog3").dialog("open");
+	$("#dialog1top").html(temp);
+	$("#dialog1bottom").html(" ");
+	$("#dialog1").dialog("option", "title", "Person in Datenbank suchen");
+	$( "#dialog1" ).dialog( "option", "buttons", { 
+		 "OK": function() {$(this).dialog("close"); } 
+		} );
+	$("#dialog1").dialog("open");
 
 }
+//--------------------------------------------------------------------------------------------
+//Aux function: HTML content : partnerRelation Dialog
+//called by: setDialogPersonOnclick 
+//--------------------------------------------------------------------------------------------
+function partnerRelationDialog(person) {
+
+	var temp = "<table border = 2 cellpaddding = 10 align=center>" + mainPerson.toRow() + person.toRow() + "</table>";
+	
+	temp += "<H3> W&auml;hle das Verh&auml;ltnis </h3>" ;
+	
+	
+	
+	$("#dialog1top").html(temp);
+	
+	$("#dialog1bottom").html(" ");
+	$("#dialog1").dialog("option", "title", "Partner Beziehung setzen");
+	$( "#dialog1" ).dialog( "option", "buttons", { 
+		 "OK": function() {$(this).dialog("close"); } 
+		} );
+	$("#dialog1").dialog("open");
+
+	
+}
+
 
 //--------------------------------------------------------------------------------------------
 //Aux function: HTML content : thisPerson2main
@@ -610,8 +648,8 @@ function updateEntry() {
 			// req Status 200 = OK, 404 = page not found
 			if (req.status == 200) {
 				// Mit der folgenden Datenbankabfrage jetzt die Hauptperson des
-				// branches
-				// lesen
+				// branches lesen. Beim update kommt ja die updated Person zurück
+				// das reicht aber nicht, um den branch aufzubauen
 				init();
 				req.onreadystatechange = function() {
 					if (req.readyState == 4) {
@@ -685,7 +723,13 @@ function setDialogPersonOnClick() {
 			footer.html(temp);
 			setPersonOnClick();
 			showBranch();
-		} else {
+		} else 
+			if(mainPerson.partner.menu.clicked == true)
+			{
+				partnerRelationDialog(listOfPerson.get(pos));
+			}
+			else
+				{
 			var query2 = "type=u";
 			if (mainPerson.father.menu.clicked == true) {
 				query2 += "&" + "FATHER_ID=" + listOfPerson.get(pos).ID
@@ -760,7 +804,7 @@ function personListinDialog() {
 		// req Status 200 = OK, 404 = page not found
 		if (req.status == 200) {
 			processXMLResponse();
-			var footer = $("#dialog3bottom");
+			var footer = $("#dialog1bottom");
 			footer.html(listOfPerson.toTable("dialogUpdateClass"));
 			// Das click behavior im Dialog ist anders als bei einer quicksearch oder advancedsearch
 			setDialogPersonOnClick();  
@@ -867,8 +911,8 @@ function ancestorTree() {
 //--------------------------------------------------------------------------------------------
 function displayDescendantTree() {
 
-	d3.select("#dialog4top") // select the 'dialog4' element
-	.selectAll("svg").remove();
+	$("#dialog1top").html("");
+	$("#dialog1bottom").html("");
 	var maxNumOfMembers = Math.max.apply(null, numOfLevelMembers);
 	console.log("maxNum of members = ",maxNumOfMembers );
 	var width = maxNumOfMembers*250 - margin.right - margin.left;
@@ -882,7 +926,7 @@ function displayDescendantTree() {
 		return [ d.x, d.y ];
 	});
 
-	var svg = d3.select("#dialog4top").append("svg").attr("width",
+	var svg = d3.select("#dialog1top").append("svg").attr("width",
 			width + margin.right + margin.left).attr("height",
 			height + margin.top + margin.bottom).append("g").attr("transform",
 			"translate(" + margin.left + "," + margin.top + ")");
@@ -933,8 +977,11 @@ function displayDescendantTree() {
 	// Enter the links.
 	link.enter().insert("path", "g").attr("class", "link").attr("d", diagonal);
 
-	$("#dialog4").dialog("option", "title", "Baum der Nachfahren");
-	$("#dialog4").dialog("open");
+	$("#dialog1").dialog("option", "title", "Baum der Nachfahren");
+	$( "#dialog1" ).dialog( "option", "buttons", { 
+		 "OK": function() {$(this).dialog("close"); } 
+		} );
+	$("#dialog1").dialog("open");
 }
 //--------------------------------------------------------------------------------------------
 //Aux function: displayAncestorTree() 
@@ -943,11 +990,11 @@ function displayDescendantTree() {
 //--------------------------------------------------------------------------------------------
 function displayAncestorTree() {
 
-	d3.select("#dialog4top") // select the 'dialog4' element
-	.selectAll("svg").remove();
-
+	$("#dialog1top").html("");
+	$("#dialog1bottom").html("");
+	
 	var maxNumOfMembers = Math.max.apply(null, numOfLevelMembers);
-	var width = maxNumOfMembers*240 - margin.right - margin.left;
+	var width = maxNumOfMembers*300 - margin.right - margin.left;
 	var height = numOfLevelMembers.length * 200 - margin.top - margin.bottom;
 
 	var i = 0;
@@ -958,7 +1005,7 @@ function displayAncestorTree() {
 		return [ d.x, height - d.y - 100 ];
 	});
 
-	var svg = d3.select("#dialog4top").append("svg").attr("width",
+	var svg = d3.select("#dialog1top").append("svg").attr("width",
 			width + margin.right + margin.left).attr("height",
 			height + margin.top + margin.bottom).append("g").attr("transform",
 			"translate(" + margin.left + "," + margin.top + ")");
@@ -1009,8 +1056,11 @@ function displayAncestorTree() {
 	// Enter the links.
 	link.enter().insert("path", "g").attr("class", "link").attr("d", diagonal);
 
-	$("#dialog4").dialog("option", "title", "Baum der Vorfahren");
-	$("#dialog4").dialog("open");
+	$("#dialog1").dialog("option", "title", "Baum der Vorfahren");
+	$( "#dialog1" ).dialog( "option", "buttons", { 
+		 "OK": function() {$(this).dialog("close"); } 
+		} );
+	$("#dialog1").dialog("open");
 }
 
 // --------------------------------------------------------------------------------------------
@@ -1022,8 +1072,14 @@ function displayAncestorTree() {
 //
 var Anchor = function(x, y, width, height) {
 
-	this.x = x;
-	this.y = y;
+	this.right = x;
+	this.left = x+width;
+	this.center = x+width/2;
+	
+	this.top = y;
+	this.middle = y+height/2;
+	this.bottom = y+ height;
+	
 	this.width = width; 
 	this.height = height;
 };
@@ -1040,7 +1096,7 @@ function appendMenu(panel, person) {
 	// Wenn das nicht geht, wird das Menü nach links unten verschoben
 	var dx = 50;
 	var dy = 50;
-	if (person.anchor.x + person.anchor.width + 55 >= width)
+	if (person.anchor.left + person.anchor.width + 55 >= width)
 		dx = -50;
 	// Zuerst den Schatten einfügen
 	// er ist nochmal um 5 nach rechts und nach unten veschoben
@@ -1213,8 +1269,8 @@ function createPanel(panel, person) {
 	textbox.append("text").text(person.PRENAME);
 	textbox.append("text").attr("dy", "1.5em").text(person.SURNAME);
 	textbox.append("text").attr("dy", "3.0em").text(person.LASTPROFESSION);
-	panel.attr("transform", "translate(" + person.anchor.x + ","
-			+ person.anchor.y + ")");
+	panel.attr("transform", "translate(" + person.anchor.right + ","
+			+ person.anchor.top + ")");
 	return;
 }
 var zaehler = 0;
@@ -1244,9 +1300,9 @@ function showBranch() {
 	var panelWidth = 20 * fontSize * .5;
 	var panelHeight= (4 + 3.4) * fontSize;
 	
-	mainPerson.anchor =  new Anchor(0.5 * width, 0.4 * height - panelHeight / 2, panelWidth, panelHeight);
-	mainPerson.father.anchor = new Anchor(panelWidth, panelHeight/2, panelWidth, panelHeight);
-	mainPerson.mother.anchor = new Anchor(width-panelWidth, panelHeight/2, panelWidth, panelHeight);
+	mainPerson.anchor =  new Anchor(0.5 * width-panelWidth/2, 0.4 * height - panelHeight / 2, panelWidth, panelHeight);
+	mainPerson.father.anchor = new Anchor(0, 0, panelWidth,panelHeight);
+	mainPerson.mother.anchor = new Anchor(width-panelWidth, 0, panelWidth, panelHeight);
 	mainPerson.partner.anchor = new Anchor(0.5 * width-panelWidth/2, 0.4 * height + panelHeight, panelWidth, panelHeight);
 
 	// Hier die Linien zeichnen, damit sie unter den Menu panels liegen
@@ -1257,31 +1313,35 @@ function showBranch() {
 			.style("fill", "none")
 			.attr(
 					"points",
-					(mainPerson.father.anchor.x)+ ","+ (mainPerson.father.anchor.y)
+					(mainPerson.father.anchor.left)+ ","+ (mainPerson.father.anchor.middle)
 							+ ","
-							+ (mainPerson.anchor.x-10) + "," + (mainPerson.father.anchor.y)
+							+ (mainPerson.anchor.center-10) + "," + (mainPerson.father.anchor.middle)
 							+ ","
-							+ (mainPerson.anchor.x-10) + "," + mainPerson.anchor.y);
+							+ (mainPerson.anchor.center-10) + "," + mainPerson.anchor.top);
 	holder
 			.append("polyline")
 			.style("stroke", "grey")
 			.style("fill", "none")
 			.attr(
 					"points",
-					(mainPerson.mother.anchor.x) + ","+ (mainPerson.mother.anchor.y)
+					(mainPerson.mother.anchor.right) + ","+ (mainPerson.mother.anchor.middle)
 							+ ","
-							+ (mainPerson.anchor.x+10)+ ","	+ (mainPerson.mother.anchor.y)
+							+ (mainPerson.anchor.center+10)+ ","	+ (mainPerson.mother.anchor.middle)
 							+ ","
-							+ (mainPerson.anchor.x+ 10) + "," + mainPerson.anchor.y);
+							+ (mainPerson.anchor.center+ 10) + "," + mainPerson.anchor.middle);
 
+	holder
+	.append("polyline")
+	.style("stroke", "grey")
+	.style("fill", "none")
+	.attr(
+			"points",
+			(mainPerson.anchor.center) + ","+ (mainPerson.anchor.bottom)
+					+ ","
+					+ (mainPerson.anchor.center)+ ","	+ (mainPerson.partner.anchor.top));
 	// Jetzt die panels zeichnen für Person, vater und Mutter
 	// falls menu == true ist, dann auch menue zeichnen
 	// =================================================================
-	// Anker korrigieren
-	mainPerson.father.anchor.x = 0;
-	mainPerson.father.anchor.y = 0;
-	mainPerson.mother.anchor.y = 0;
-	mainPerson.anchor.x -= panelWidth/2;
 		
 	// Panel für die Hauptperson
 	var panel = holder.append("g");
@@ -1301,8 +1361,8 @@ function showBranch() {
 	panel = holder.append("g");
 	createPanel(panel, mainPerson.partner);
 	// Überschrift "Partner"
-	panel.append("text").attr("dx", panelWidth / 2).attr("dy", -10).attr(
-			"font-style", "italic").attr("text-anchor", "middle")
+	panel.append("text").attr("dy", -10).attr(
+			"font-style", "italic").attr("text-anchor", "left")
 			.text("Partner");
 	
 }
@@ -1312,93 +1372,6 @@ function showBranch() {
 // --------------------------------------------------------------------------------------------
 $(function() {
 	$("#dialog1").dialog({
-		position : {
-			my : "left+10 top+10",
-			at : "left top",
-			of : "#footer2"
-		},
-		height : "auto",
-		width : "auto",
-		dialogClass : "mydiag",
-		autoOpen : false,
-		modal : true,
-		buttons : {
-			"Cancel" : function() {
-				$(this).dialog("close");
-			},
-			"OK" : function() {
-				createEntry();
-				$(this).dialog("close");
-			}
-		},
-		show : {
-			effect : "blind",
-			duration : 1000
-		},
-		hide : {
-			effect : "explode",
-			duration : 1000
-		}
-	});
-	$("#dialog2").dialog({
-		position : {
-			my : "left+10 top+10",
-			at : "left top",
-			of : "#footer2"
-		},
-		height : "auto",
-		width : "auto",
-		dialogClass : "mydiag",
-		autoOpen : false,
-		modal : true,
-		buttons : {
-			"Cancel" : function() {
-				$(this).dialog("close");
-			},
-			"Submit" : function() {
-				updateEntry();
-				$(this).dialog("close");
-				// updateEntry();
-			}
-		},
-		show : {
-			effect : "blind",
-			duration : 1000
-		},
-		hide : {
-			effect : "explode",
-			duration : 1000
-		}
-	});
-	$("#dialog3").dialog({
-		position : {
-			my : "left+10 top+10",
-			at : "left top",
-			of : "#footer2"
-		},
-		height : "auto",
-		width : "auto",
-		dialogClass : "mydiag",
-		autoOpen : false,
-		modal : true,
-		buttons : {
-			"Cancel" : function() {
-				$(this).dialog("close");
-			},
-			"OK" : function() {
-				$(this).dialog("close");
-			}
-		},
-		show : {
-			effect : "blind",
-			duration : 1000
-		},
-		hide : {
-			effect : "explode",
-			duration : 1000
-		}
-	});
-	$("#dialog4").dialog({
 		position : {
 			my : "left+10 top+10",
 			at : "left top",

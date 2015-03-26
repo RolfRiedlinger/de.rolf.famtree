@@ -186,7 +186,7 @@ public class ViewControl {
 	};
 		
 	private Person getAncestor(String id){
-		String sql = "SELECT *from MASTERTABLE where ID="+id;
+		String sql = "SELECT * from MASTERTABLE where ID="+id;
 		Connection con;
 		Statement stmt;
 		Person person = null;
@@ -239,7 +239,7 @@ public class ViewControl {
 		
 	private Person getChild(String id){
 		
-		//hier bereite ich die SQL für Schritt eins vor. DieDetailsder Hauptperson in dieser 
+		//hier bereite ich die SQL für Schritt eins vor. Die Details der Hauptperson in dieser 
 		// Iteration werden von der datenbank geholt.
 		String sql = "SELECT *from MASTERTABLE where ID="+id;
 		Connection con;
