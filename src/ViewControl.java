@@ -232,7 +232,11 @@ public class ViewControl {
 		String id = query.getProperty("ID");
 		return getChild(id);		
 	};
-		
+
+/* ==================================================================================================
+ * Old code: Das benutzt noch die Vorgehensweise über die Partnerliste
+ * 
+ ==================================================================================================
 	private Person getChild(String id){
 		
 		//hier bereite ich die SQL für Schritt eins vor. Die Details der Hauptperson in dieser 
@@ -315,6 +319,62 @@ public class ViewControl {
 		
 		
 	}
+==================================================================================================*/
+	private Person getChild(String id){
+		
+		//hier bereite ich die SQL für Schritt eins vor. Die Details der Hauptperson in dieser 
+		// Iteration werden von der datenbank geholt.
+		String sql = "SELECT *from MASTERTABLE where ID="+id;
+		Connection con;
+		Statement stmt;
+		Person person = null;
+
+		List <String> childIds = new ArrayList<String>();   // Das ist die Liste der childIds pro Partner . Ich speichere diese zwischen
+		List <Person> children = new ArrayList<Person>();   // Das ist die Liste der Kinder als Personen, sie werden rekursiv generiert.
+	
+		
+		// start der datenbank Operationen mit try catch umgeben. 
+		try {
+			Context initContext = new InitialContext();
+			DataSource ds = (DataSource) initContext
+					.lookup("java:comp/env/jdbc/fmtreedb");
+			// Get a database connection
+			con = ds.getConnection();
+
+			// Prepare a statement object used to execute query
+			stmt = con.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			// 1. das sind die Details der aktuellen Person 
+			while (rs.next()) {
+				person = new Person(rs);		
+			}
+			// Für die Person werden jetzt alle child ids generiert
+			sql = "SELECT ID from MASTERTABLE WHERE FATHER_ID=" + id +" OR MOTHER_ID="+id;
+			rs = stmt.executeQuery(sql);
+			if (rs.isBeforeFirst() ) {    
+		
+			while (rs.next()) {
+				childIds.add(rs.getString("ID"));
+			}
+			}
+			rs.close();
+			stmt.close();	
+			con.close();
+		} catch (java.lang.Exception e) {
+			e.printStackTrace();
+			System.err.print(e.getClass().getName());
+			System.err.println(e.getMessage());
+		}
+		if(!childIds.isEmpty()){
+			for (String myId: childIds){
+				children.add(getChild(myId));
+			}
+		person.setChildren(children);
+		}
+		return person;
+	}
+			
+	
 	
 	private int callDatabase(String sql) {
 		Connection con;

@@ -867,6 +867,16 @@ function showMenu() {
 				<tr><td onmouseover="movein(this)" onmouseout="moveout(this)" onclick=\
 				"descendantTree()">Nachfahren als Baum  zeigen</td></tr></table>';
 	$("#menu2").html(temp);
+	
+	$("#coolmenu").height(120);
+	temp = '<button class=option  onclick="createForm()">Neuen Zweig erstellen</button> \
+			<button class=option  onclick="searchForm()">Person suchen</button> \
+			<button class=option>Hilfe</button>	\
+			<button class=option onclick="ancestorTree()">Baum der Vorfahren</button> \
+			<button class=option  onclick="descendantTree()">Baum der Nachfahren</button>';
+			
+	$("#coolmenu").html(temp);
+			
 
 };
 
@@ -926,7 +936,7 @@ function displayDescendantTree() {
 	$("#dialog1bottom").html("");
 	var maxNumOfMembers = Math.max.apply(null, numOfLevelMembers);
 	console.log("maxNum of members = ",maxNumOfMembers );
-	var width = maxNumOfMembers*250 - margin.right - margin.left;
+	var width = maxNumOfMembers*280 - margin.right - margin.left;
 	var height = numOfLevelMembers.length * 200 - margin.top - margin.bottom;
 
 	var i = 0;
@@ -939,8 +949,9 @@ function displayDescendantTree() {
 
 	var svg = d3.select("#dialog1top").append("svg").attr("width",
 			width + margin.right + margin.left).attr("height",
-			height + margin.top + margin.bottom).append("g").attr("transform",
-			"translate(" + margin.left + "," + margin.top + ")");
+			height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform","translate(" + margin.left + "," + margin.top + ")");
 
 	root = mainPerson;
 
