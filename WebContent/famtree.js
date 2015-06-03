@@ -32,25 +32,25 @@ var req; // req variable for the http communication
 // push() , adds a person to the list, get() returns a person from the list
 // methods:
 // toTable: writes the list in an html table. Als Parameter wird ein class
-// Name übergeben, über den später die
+// Name ï¿½bergeben, ï¿½ber den spï¿½ter die
 // Zeilen der Tabelle highlighted werden.
-// clear : löschen der Liste.
+// clear : lï¿½schen der Liste.
 var listOfPerson = {
 	_listOfPerson : [],
 	push : function(value) {
 		this._listOfPerson.push(value);
 	},
 	get : function(index) {
-		// Hier wird ein Kopie des Elementes zurückgegeben 
+		// Hier wird ein Kopie des Elementes zurï¿½ckgegeben 
 		// das muss passieren, weil die Funktion benutzt wird um 
-		// für eine mainPerson Vater und Mutter aus der Datenbank zu bestimmen
-		// der callback der Datanbank würde eine Referenz mit dneuen daten überschreiben. 
+		// fï¿½r eine mainPerson Vater und Mutter aus der Datenbank zu bestimmen
+		// der callback der Datanbank wï¿½rde eine Referenz mit dneuen daten ï¿½berschreiben. 
 		return this._listOfPerson.slice(index, index + 1)[0];
 	},
-	// Das generiert eine Tabelle für die Liste von Personen
+	// Das generiert eine Tabelle fï¿½r die Liste von Personen
 	// wird benutzt um in der bottom sektion Query resultate anzuzeigen.
 	toTable : function(styleAttribute) {
-		var tableString = "<table border = 2 cellpaddding = 10 align=center>";
+		var tableString = "<table>";
 		tableString += personListHeader();
 
 		for (var i = 0; i < this._listOfPerson.length; i++) {
@@ -61,7 +61,7 @@ var listOfPerson = {
 		return tableString;
 	},
 	// bevor eine neue Anfrage an die Datenbank bearbeitet wird, muss 
-	// die aktuelle Liste gelöscht werden.
+	// die aktuelle Liste gelï¿½scht werden.
 	clear : function() {
 		while (this._listOfPerson.length > 0) {
 			this._listOfPerson.pop();
@@ -74,13 +74,13 @@ var listOfPerson = {
 var mainPerson = null;
 
 // Das sind Menudaten aus der Branchview. 
-// Damit ist gespeichert was gedrückt wurde
+// Damit ist gespeichert was gedrï¿½ckt wurde
 // MenuData ist Teil des Objektes Person. 
 var MenuData = function() {
 	// display ist true, wenn menu angezeigt wird. Nochmaliges clicken setzt den 
-	// den Wert wieder auf false. Dasmenu wird gelöscht. 
+	// den Wert wieder auf false. Dasmenu wird gelï¿½scht. 
 	this.display = false;
-	// click speichert, ob irgendwas im Menu gewählt wurde 
+	// click speichert, ob irgendwas im Menu gewï¿½hlt wurde 
 	this.clicked = false;
 
 };
@@ -97,10 +97,10 @@ function resetMenuData() {
 
 // numOfLevelMembers ist ein Array, was pro Level eines Baumes mit der ersten Person als root 
 // die Information speichert, wieviele Person sich auf gleicher stufe befinden 
-// Diese Info wird benutzt um die Größe der Fenster für den Nachfahren-baum und den 
+// Diese Info wird benutzt um die Grï¿½ï¿½e der Fenster fï¿½r den Nachfahren-baum und den 
 // Vorfahren-baum zu berechnen
-// numOfLevelMembers.length gibt die Höhe des Baumes an. Das Maxim von numOfLevelMembers[i] ist 
-// ein Maß für die Breite. 
+// numOfLevelMembers.length gibt die Hï¿½he des Baumes an. Das Maxim von numOfLevelMembers[i] ist 
+// ein Maï¿½ fï¿½r die Breite. 
 var numOfLevelMembers = []; 
 // person is the object to hold the person's information
 // these are the attributes as well as the father and the mother, partners and childs
@@ -128,7 +128,7 @@ var Person = function(node1,level) {
 
 	{
 		// Anchor: In dieser struktur werden Ankerpunkte
-		// sowie widht and height für die Person definiert
+		// sowie widht and height fï¿½r die Person definiert
 		// Das wird in der branch view verwendet. 
 		"anchor" : {
 			set : function(val) {
@@ -138,8 +138,8 @@ var Person = function(node1,level) {
 				return this._anchor;
 			}
 		},
-		// menu: Hier wird für die branchview gespeochert. was ein Benutzer 
-		// gedrückt hat, siehe MenuData
+		// menu: Hier wird fï¿½r die branchview gespeochert. was ein Benutzer 
+		// gedrï¿½ckt hat, siehe MenuData
 		"menu" : {
 			set : function(val) {
 				this._menu = val;
@@ -153,7 +153,7 @@ var Person = function(node1,level) {
 		"toRow" : {
 			value : function(className) {
 				var myString = "<tr  class=" + className + ">";
-				for (var i = 0; i < attribute.length; i++) {
+				for (var i = 0; i < 3; i++) {
 					if (this[attribute[i]] != undefined)
 						myString += "<td>" + this[attribute[i]] + "</td>";
 					else
@@ -163,7 +163,7 @@ var Person = function(node1,level) {
 				return myString;
 			}
 		},
-		// toForm: wird benutzt für die "diese Person bearbeiten" Option 
+		// toForm: wird benutzt fï¿½r die "diese Person bearbeiten" Option 
 		"toForm" : {
 			value : function() {
 				var temp = "";
@@ -203,7 +203,7 @@ var Person = function(node1,level) {
 	}
 
 	// description muss immer da sein,
-	// als nächstes kann jetzt folgen
+	// als nï¿½chstes kann jetzt folgen
 	// <FATHER>, <MOTHER>, <PERSON> oder null. Letzteres ist wenn eine Personen
 	// description das Ende der response bildet.
 	var nextTag = description[0].nextSibling;
@@ -211,7 +211,7 @@ var Person = function(node1,level) {
 	if (nextTag != null && nextTag.nodeName == "FATHER") {
 		this.father = new Person(nextTag,level+1); // Hier erfolgt der rekursive Aufruf
 											// um das objekt aufzubauen
-		this.children = []; // children [] brauche ich für das D3 Treelayout
+		this.children = []; // children [] brauche ich fï¿½r das D3 Treelayout
 		this.children[0] = this.father;
 
 		nextTag = nextTag.nextSibling; // move to next Tag
@@ -237,9 +237,9 @@ var Person = function(node1,level) {
 	// Children Feld gemappt wird
 	// 
 
-	if (nextTag != null && nextTag.nodeName == "PARTNER") {
+	 if (nextTag != null && nextTag.nodeName == "PARTNER") {
 		if (this.children == undefined)
-			this.children = []; // Brauche ich für die D3 Mimik.
+			this.children = []; // Brauche ich fï¿½r die D3 Mimik.
 		var i = 0;
 		while (nextTag != null && nextTag.nodeName == "PARTNER") {
 			this.children[i++] = new Person(nextTag,level+1);
@@ -249,7 +249,7 @@ var Person = function(node1,level) {
 
 	if (nextTag != null && nextTag.nodeName == "CHILD") {
 		if (this.children == undefined)
-			this.children = []; // Brauche ich für die D3 Mimik.
+			this.children = []; // Brauche ich fï¿½r die D3 Mimik.
 		var i = 0; // children und PArtner schliessen sich aus, daher kannhier
 					// der index wieder mit 0 beginnen
 		while (nextTag != null && nextTag.nodeName == "CHILD") {
@@ -329,10 +329,11 @@ function moveout(which) {
 // result) table
 // --------------------------------------------------------------------------------------------
 function personListHeader() {
-	var myString = "";
-	for (var i = 0; i < attribute.length; i++) {
+	var myString = "<thead><tr>";
+	for (var i = 0; i < 3; i++) {
 		myString += "<th>" + label[i] + "</th>";
 	}
+	myString += "</thead>"
 	return myString;
 }
 
@@ -434,21 +435,31 @@ function searchInDatabase(person) {
 //--------------------------------------------------------------------------------------------
 function partnerRelationDialog(person) {
 
-	var temp = "<table border = 2 cellpaddding = 10 align=center>" + mainPerson.toRow() + person.toRow() + "</table>";
+	// Jetzt die Partnerinfo aus der Datenbank abfragen und anzeigen. 
+	// Die Felder der Partnerinfo kÃ¶nnen dann editiert und erweitert werden 
+	// Diese werden dann an den Server gegeben, der die EintrÃ¤ge dann neu anlegt. 
 	
-	temp += "<H3> W&auml;hle das Verh&auml;ltnis </h3>" ;
+	var query = "type=p&ID1="+mainPerson.ID+"&ID2="+person.ID;
 	
+	req.onreadystatechange = function(person){
 	
-	
-	$("#dialog1top").html(temp);
-	
-	$("#dialog1bottom").html(" ");
-	$("#dialog1").dialog("option", "title", "Partner Beziehung setzen");
-	$( "#dialog1" ).dialog( "option", "buttons", { 
-		 "OK": function() {$(this).dialog("close"); } 
-		} );
-	$("#dialog1").dialog("open");
+		var temp = "<table border = 2 cellpaddding = 10 align=center>" + mainPerson.toRow() + person.toRow() + "</table>";
+		temp += "<H3> W&auml;hle das Verh&auml;ltnis </h3>" ;
+		
+		
+		
+		$("#dialog2top").html(temp);
+		
+		$("#dialog2bottom").html(" ");
+		$("#dialog2").dialog("option", "title", "Partner Beziehung setzen");
+		$( "#dialog2" ).dialog( "option", "buttons", { 
+			 "OK": function() {$(this).dialog("close"); } 
+			} );
+		$("#dialog2").dialog("open");
 
+	};
+	
+	
 	
 }
 
@@ -461,7 +472,7 @@ function thisPerson2Main(person) {
 
 	// relevant ist die ID der person die geklickt hat
 	// deren Daten werden von der Datenbank geholt und angezeigt
-	// Für diese Person muss Mutter undVater aus der Datenbank geholt werden. 
+	// Fï¿½r diese Person muss Mutter undVater aus der Datenbank geholt werden. 
 	init();
 	req.onreadystatechange = function() {
 		if (req.readyState == 4) {
@@ -483,14 +494,14 @@ function thisPerson2Main(person) {
 // --------------------------------------------------------------------------------------------
 // Aux function: Call server with form data from Dialog 
 // called by: SearchInDatabase (das ist die Funktion, wenn der Search button im Dialog
-//            gedrückt wird ) 
+//            gedrï¿½ckt wird ) 
 // --------------------------------------------------------------------------------------------
 function quickSearchInDialog() {
 	// quicksearch ist eine fuzzy search,
-	// was die Datenbank nach ähnlichen Nach- und Vornamen durchsucht
+	// was die Datenbank nach ï¿½hnlichen Nach- und Vornamen durchsucht
 	// Die Onclick Aktion ist:
 	// die Details der geklickten Person werden oben rechts angezeigt und
-	// können bearbeitet werden
+	// kï¿½nnen bearbeitet werden
 	var query = $("input[name='quicksearchindialog']"); // Suchtext wird gelesen
 	init();
 	req.onreadystatechange = personListinDialog;
@@ -503,10 +514,10 @@ function quickSearchInDialog() {
 // --------------------------------------------------------------------------------------------
 function quickSearch() {
 	// quicksearch ist eine fuzzy search,
-	// wasdie Datenbank nach ähnlichen Nach- und Vornamen durchsucht
+	// wasdie Datenbank nach ï¿½hnlichen Nach- und Vornamen durchsucht
 	// Die Onclick Aktion ist:
 	// die Details der geklickten Person werden oben rechts angezeigt und
-	// können bearbeitet werden
+	// kï¿½nnen bearbeitet werden
 	var query = $("input[name='quicksearch']"); // Suchtext wird gelesen
 	init();
 	req.onreadystatechange = personList;
@@ -540,7 +551,7 @@ function advancedSearch() {
 // --------------------------------------------------------------------------------------------
 function createEntry() {
 	// CallFuntion um einen Eintrag in der Datenbank zu ezeugen.
-	// Highlights von Feldern werden zurückgenommen
+	// Highlights von Feldern werden zurï¿½ckgenommen
 	// Dann wird der http request String aufgebaut
 	// $(".green").removeClass("green");
 
@@ -558,11 +569,11 @@ function createEntry() {
 	init();
 	// Schreib doch die callback function hier rein
 	req.onreadystatechange = function() {
-		// Callbackfunktion für create query 
+		// Callbackfunktion fï¿½r create query 
 		// der server legt die Person in der datenbank an und fragt zur Kontrolle 
 		// den angelgten record wieder ab undschickt ihn alsXML response.
 		// die XML response des http requests wird geparsed
-		// es muss genau ein Entry zurückkommen
+		// es muss genau ein Entry zurï¿½ckkommen
 		// Es ist aber zu entscheiden, ob die neu angelegte Funktion eine
 		// Hauptperson, ein Vater oder eine Mutter ist 
 
@@ -571,7 +582,7 @@ function createEntry() {
 			// req Status 200 = OK, 404 = page not found
 			if (req.status == 200) {
 				processXMLResponse();
-				// Unterscheidung der Fälle ob Vater, Mutter angelegt worden ist
+				// Unterscheidung der Fï¿½lle ob Vater, Mutter angelegt worden ist
 				if (mainPerson != null
 						&& (mainPerson.father.menu.clicked == true || mainPerson.mother.menu.clicked == true)) {
 					var query2 = "type=u";
@@ -610,7 +621,7 @@ function createEntry() {
 					};
 					req.send(query2);
 				} else {
-					// Das ist der Fall, wo eine eigenständige neue Person angelegt wird
+					// Das ist der Fall, wo eine eigenstï¿½ndige neue Person angelegt wird
 					// ohne das eine Vater / Mutter Beziehung gesetzt werden muss
 					var footer = $("#footer2");
 					footer.html(listOfPerson.toTable("updateClass"));
@@ -631,7 +642,7 @@ function createEntry() {
 function updateEntry() {
 	// CallFunction um einen Eintrag in der Datenbank zu erneuern.
 	// Die Dialogfelder werden ausgelesen 
-	// Danach der update request abgefeuert für die entsprechende ID abgefeuert 
+	// Danach der update request abgefeuert fï¿½r die entsprechende ID abgefeuert 
 	// und daraufhin die mainPerson des Branches wieder geholt.
 	
 	var query = "type=u";
@@ -648,7 +659,7 @@ function updateEntry() {
 			// req Status 200 = OK, 404 = page not found
 			if (req.status == 200) {
 				// Mit der folgenden Datenbankabfrage jetzt die Hauptperson des
-				// branches lesen. Beim update kommt ja die updated Person zurück
+				// branches lesen. Beim update kommt ja die updated Person zurï¿½ck
 				// das reicht aber nicht, um den branch aufzubauen
 				init();
 				req.onreadystatechange = function() {
@@ -701,17 +712,17 @@ function setDialogPersonOnClick() {
 	var obj = $(".dialogUpdateClass");
 	obj.click(function() {
 		var pos = obj.index(this);
-		// die ausgewählte Reihe wird highlighted
+		// die ausgewï¿½hlte Reihe wird highlighted
 		$(".dialogUpdateClass").removeClass("green");
 		$(this).addClass("green"); 
-		// Hier muss jetzt der code rein, wo die ausgewählte Person 
+		// Hier muss jetzt der code rein, wo die ausgewï¿½hlte Person 
 		// Denn jetzt in der Branch view hinplatziert werden soll
 		// Case 1: mainperson Menu: Option "anderer Zweig bearbeiten" 
-		//         die ausgewählte Person wird geladen, als meinPerson gesetzt und angezeigt 
-		// case 2: Father Menu: die ausgewählte Person wird als Vater  der mainPerson aktualisiert
-		// 					die aktualisierte mainPerson wirdvom server zurückgegeben und angezeigt
-		// case 3  Mother Menu: die ausgewählte Person wird als Mutter der mainPerson aktualisiert
-		//					die aktualisierte mainPerson wirdvom server zurückgegeben und angezeigt
+		//         die ausgewï¿½hlte Person wird geladen, als mainPerson gesetzt und angezeigt 
+		// case 2: Father Menu: die ausgewï¿½hlte Person wird als Vater  der mainPerson aktualisiert
+		// 					die aktualisierte mainPerson wirdvom server zurï¿½ckgegeben und angezeigt
+		// case 3  Mother Menu: die ausgewï¿½hlte Person wird als Mutter der mainPerson aktualisiert
+		//					die aktualisierte mainPerson wirdvom server zurï¿½ckgegeben und angezeigt
 		if (mainPerson.menu.clicked == true) {
 			mainPerson = listOfPerson.get(pos);
 			var footer = $("#footer2");
@@ -768,9 +779,9 @@ function setDialogPersonOnClick() {
 //After the result is put into a table, the onclick behviour of rows is set
 //--------------------------------------------------------------------------------------------
 function personList() {
-	// Callbackfunktion für die Suchanfragen an die Datenbank
-	// Eine Suchanfrage liefert immer eine Liste von Personen, die sich für die
-	// Suche qualifiziert haben, zurück
+	// Callbackfunktion fï¿½r die Suchanfragen an die Datenbank
+	// Eine Suchanfrage liefert immer eine Liste von Personen, die sich fï¿½r die
+	// Suche qualifiziert haben, zurï¿½ck
 	// die XML response des http requests wird geparsed
 	// und die Resultatliste der Personen aufgebaut.
 	// Das Ergebnis wird als Tabelle unten hingeschrieben.
@@ -792,9 +803,9 @@ function personList() {
 //After the result is put into a table, the onclick behaviour of rows is set
 //--------------------------------------------------------------------------------------------
 function personListinDialog() {
-	// Callbackfunktion für die Suchanfragen an die Datenbank
-	// Eine Suchanfrage liefert immer eine Liste von Personen, die sich für die
-	// Suche qualifizieren, zurück
+	// Callbackfunktion fï¿½r die Suchanfragen an die Datenbank
+	// Eine Suchanfrage liefert immer eine Liste von Personen, die sich fï¿½r die
+	// Suche qualifizieren, zurï¿½ck
 	// die XML response des http requests wird geparsed
 	// und die Resultatliste der Personen aufgebaut.
 	// Das Ergebnis wird als Tabelle unten hingeschrieben.
@@ -1068,7 +1079,7 @@ function displayAncestorTree() {
 // Anchors are used in the branch view
 // --------------------------------------------------------------------------------------------
 //
-// Konstruktor für das Anchor Objekt
+// Konstruktor fï¿½r das Anchor Objekt
 //
 var Anchor = function(x, y, width, height) {
 
@@ -1092,13 +1103,13 @@ function appendMenu(panel, person) {
 	// Test, ob das menu noch in das Window passt
 	// by default wird das Menu rechts unten verschoben zum Person panel
 	// angezeigt
-	// der Schatten des Menüs ist um 55px verschoben
-	// Wenn das nicht geht, wird das Menü nach links unten verschoben
+	// der Schatten des Menï¿½s ist um 55px verschoben
+	// Wenn das nicht geht, wird das Menï¿½ nach links unten verschoben
 	var dx = 50;
 	var dy = 50;
 	if (person.anchor.left + person.anchor.width + 55 >= width)
 		dx = -50;
-	// Zuerst den Schatten einfügen
+	// Zuerst den Schatten einfï¿½gen
 	// er ist nochmal um 5 nach rechts und nach unten veschoben
 	var group = panel.append("g").attr("id", "gmenu").attr("transform",
 			"translate(" + dx + "," + dy + ")");
@@ -1106,17 +1117,17 @@ function appendMenu(panel, person) {
 	group.append("rect").attr("class", "panel").attr("width", 220).attr(
 			"height", person.anchor.height).attr("x", +5).attr("y", 5).attr(
 			"fill", "grey");
-	// Jetzt das Menü panel einfügen
+	// Jetzt das Menï¿½ panel einfï¿½gen
 	group.append("rect").attr("class", "panel").attr("width", 220).attr(
 			"height", person.anchor.height).attr("fill", "sienna");
-	// Hier kommt die Textbox für das Menü
+	// Hier kommt die Textbox fï¿½r das Menï¿½
 	// Schade dass hier nicht em als Einheit genommen werden kann
 	var textbox = group.append("g").attr("class", "menu").attr("transform",
 			"translate(" + (fontSize) + "," + (fontSize * 2) + ")")
 
 	.style("font-size", fontSize + "px").style("fill", "white");
-	// Für die erste Menuezeile wird das Hintergrundrechteck eingefügt
-	// Die Farbe richtet sich nach dem, ob der Menüpunkt selected ist
+	// Fï¿½r die erste Menuezeile wird das Hintergrundrechteck eingefï¿½gt
+	// Die Farbe richtet sich nach dem, ob der Menï¿½punkt selected ist
 	textbox.append("rect").style("fill", function() {
 		return (person.menu.edit) ? "black" : "grey";
 	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
@@ -1133,8 +1144,8 @@ function appendMenu(panel, person) {
 		person.menu.clicked = true;
 		editOrCreatePerson(person);
 	});
-	// Für die zweite Menuezeile wird das Hintergrundrechteck eingefügt
-	// Die Farbe richtet sich nach dem, ob der Menüpunkt selected ist
+	// Fï¿½r die zweite Menuezeile wird das Hintergrundrechteck eingefï¿½gt
+	// Die Farbe richtet sich nach dem, ob der Menï¿½punkt selected ist
 	textbox.append("rect").style("fill", function() {
 		return (person.menu.search) ? "black" : "grey";
 	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
@@ -1150,7 +1161,7 @@ function appendMenu(panel, person) {
 		person.menu.clicked = true;
 		searchInDatabase(person);
 	});
-	// Dritte Menüzeile einfügen
+	// Dritte Menï¿½zeile einfï¿½gen
 	textbox.append("rect").style("fill", function() {
 		return (person.menu.branch) ? "black" : "grey";
 	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
@@ -1177,13 +1188,13 @@ function appendMainPersonMenu(panel, person) {
 	// Test, ob das Menu noch in das Window passt
 	// by default wird das Menu rechts unten verschoben zum Person panel
 	// angezeigt
-	// der Schatten des Menüs ist um 55px verschoben
-	// Wenn das nicht geht, wird das Menü nach links unten verschoben
+	// der Schatten des Menï¿½s ist um 55px verschoben
+	// Wenn das nicht geht, wird das Menï¿½ nach links unten verschoben
 	var dx = 50;
 	var dy = 50;
 	if (person.anchor.x + person.anchor.width + 55 >= width)
 		dx = -50;
-	// Zuerst den Schatten einfügen
+	// Zuerst den Schatten einfï¿½gen
 	// er ist nochmal um 5 nach rechts und nach unten veschoben
 	var group = panel.append("g").attr("id", "gmenu").attr("transform",
 			"translate(" + dx + "," + dy + ")");
@@ -1191,17 +1202,17 @@ function appendMainPersonMenu(panel, person) {
 	group.append("rect").attr("class", "panel").attr("width", 220).attr(
 			"height", person.anchor.height).attr("x", 5).attr("y", 5).attr(
 			"fill", "grey");
-	// Jetzt das Menü panel einfügen
+	// Jetzt das Menï¿½ panel einfï¿½gen
 	group.append("rect").attr("class", "panel").attr("width", 220).attr(
 			"height", person.anchor.height).attr("fill", "sienna");
-	// Hier kommt die Textbox für das Menü
+	// Hier kommt die Textbox fï¿½r das Menï¿½
 	// Schade dass hier nicht em als Einheit genommen werden kann
 	var textbox = group.append("g").attr("class", "menu").attr("transform",
 			"translate(" + (fontSize) + "," + (fontSize * 2) + ")")
 
 	.style("font-size", fontSize + "px").style("fill", "white");
-	// Für die erste Menuezeile wird das Hintergrundrechteck eingefügt
-	// Die Farbe richtet sich nach dem, ob der Menüpunkt selected ist
+	// Fï¿½r die erste Menuezeile wird das Hintergrundrechteck eingefï¿½gt
+	// Die Farbe richtet sich nach dem, ob der Menï¿½punkt selected ist
 	textbox.append("rect").style("fill", function() {
 		return (person.menu.edit) ? "black" : "grey";
 	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
@@ -1218,8 +1229,8 @@ function appendMainPersonMenu(panel, person) {
 		person.menu.clicked = true;
 		editOrCreatePerson(person);
 	});
-	// Für die zweite Menuezeile wird das Hintergrundrechteck eingefügt
-	// Die Farbe richtet sich nach dem, ob der Menüpunkt selected ist
+	// Fï¿½r die zweite Menuezeile wird das Hintergrundrechteck eingefï¿½gt
+	// Die Farbe richtet sich nach dem, ob der Menï¿½punkt selected ist
 	textbox.append("rect").style("fill", function() {
 		return (person.menu.search) ? "black" : "grey";
 	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
@@ -1242,7 +1253,7 @@ function appendMainPersonMenu(panel, person) {
 // Aux function: D3 Grafics, create a person's panel for showbranch
 // --------------------------------------------------------------------------------------------
 function createPanel(panel, person) {
-	panel.append("rect") // Jetzt das Rechteck einfügen
+	panel.append("rect") // Jetzt das Rechteck einfï¿½gen
 	.attr("width", person.anchor.width).attr("height", person.anchor.height)
 			.attr("rx", 10).attr("ry", 5).on("click", function() {
 				var temp = person.menu.display;
@@ -1258,7 +1269,7 @@ function createPanel(panel, person) {
 				}
 			}).attr("fill", "Darkgreen");
 
-	var textbox = panel.append("g") // textbox hinzufügen
+	var textbox = panel.append("g") // textbox hinzufï¿½gen
 	.attr("transform", "translate(" + fontSize + "," + (fontSize * 2) + ")") // Schade
 	// dass
 	// hier
@@ -1283,19 +1294,18 @@ function showBranch() {
 	resetMenuData();
 
 	$("#upper_right").html("");
-	console.log("ShowBranch" + (++zaehler));
 	if (mainPerson == undefined)
 		console.log("ShowBranch undefined mainPerson" + (zaehler));
 	var holder = d3.select("#upper_right") // select the 'upper right' element
 	.append("svg") // Grafik Element in upper_right platzieren
 	.attr("width", width + margin.left + margin.right).attr("height",
-			height + margin.top + margin.bottom).attr("class", "chart").append(
-			"g") // im Grafik element eine Gruppe platzieren, dieses wird an
-	// holder zurückgegeben
+			height + margin.top + margin.bottom)
+	.attr("class", "chart")
+	.append("g") // im Grafik element eine Gruppe platzieren, dieses wird an 	// holder zurï¿½ckgegeben
 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-	// Anchorpoints und Maße ausrechnen für die Linien
-	// und für die Platzierung der Panels
+	// Anchorpoints und Maï¿½e ausrechnen fï¿½r die Linien
+	// und fï¿½r die Platzierung der Panels
 
 	var panelWidth = 20 * fontSize * .5;
 	var panelHeight= (4 + 3.4) * fontSize;
@@ -1339,28 +1349,28 @@ function showBranch() {
 			(mainPerson.anchor.center) + ","+ (mainPerson.anchor.bottom)
 					+ ","
 					+ (mainPerson.anchor.center)+ ","	+ (mainPerson.partner.anchor.top));
-	// Jetzt die panels zeichnen für Person, vater und Mutter
+	// Jetzt die panels zeichnen fï¿½r Person, vater und Mutter
 	// falls menu == true ist, dann auch menue zeichnen
 	// =================================================================
 		
-	// Panel für die Hauptperson
+	// Panel fï¿½r die Hauptperson
 	var panel = holder.append("g");
 	createPanel(panel, mainPerson);
-	// Panel für den Vater der Person
+	// Panel fï¿½r den Vater der Person
 	panel = holder.append("g");
 	createPanel(panel, mainPerson.father);
-	// Überschrift "Vater" setzen
+	// ï¿½berschrift "Vater" setzen
 	panel.append("text").attr("dx", panelWidth / 2).attr("dy", -10).attr(
 			"font-style", "italic").attr("text-anchor", "middle").text("Vater");
 	panel = holder.append("g");
 	createPanel(panel, mainPerson.mother);
-	// Überschrift "Mutter"
+	// ï¿½berschrift "Mutter"
 	panel.append("text").attr("dx", panelWidth / 2).attr("dy", -10).attr(
 			"font-style", "italic").attr("text-anchor", "middle")
 			.text("Mutter");
 	panel = holder.append("g");
 	createPanel(panel, mainPerson.partner);
-	// Überschrift "Partner"
+	// ï¿½berschrift "Partner"
 	panel.append("text").attr("dy", -10).attr(
 			"font-style", "italic").attr("text-anchor", "left")
 			.text("Partner");
@@ -1372,6 +1382,31 @@ function showBranch() {
 // --------------------------------------------------------------------------------------------
 $(function() {
 	$("#dialog1").dialog({
+		position : {
+			my : "left+10 top+10",
+			at : "left top",
+			of : "#footer2"
+		},
+		height : "auto",
+		width : "auto",
+		dialogClass : "mydiag",
+		autoOpen : false,
+		modal : true,
+		buttons : {
+			"OK" : function() {
+				$(this).dialog("close");
+			}
+		},
+		show : {
+			effect : "blind",
+			duration : 1000
+		},
+		hide : {
+			effect : "explode",
+			duration : 1000
+		}
+	});
+	$("#dialog2").dialog({
 		position : {
 			my : "left+10 top+10",
 			at : "left top",

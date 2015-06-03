@@ -1,6 +1,32 @@
+body {
+	font-family: Arial, Verdana, sans serif;
+	background-color: white;
+	padding: 10px;
+	
+}
+
+p {
+	line-height: 3em;
+}
+
 h1,h2 {
 	color: sienna;
+	
 }
+table {
+	margin: 10px auto 10px auto ;
+	
+}
+
+table,tr,td{
+	padding : 10px;
+	
+}
+
+#upper_right {
+	padding: 20px;
+}
+
 
 .node text {
 	font: 12px sans-serif;
@@ -20,9 +46,6 @@ h1,h2 {
 	font-size:15px;
 }
 
-.mydiag{
-	font-family: Times New Roman;
-}
 
 .green {
 	
@@ -37,6 +60,7 @@ border: 1px solid black;
 .coolmenu td{
 background-color:bisque;
 cursor:hand;
-font-family:Times New Roman;
+padding: 10px;
+
 
 }

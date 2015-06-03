@@ -1,7 +1,7 @@
 
 public enum AttributeNames {
 
-
+	A1 ("ID","ID","id"),
 	A2 ("PRENAME","PRENAME","text"),
 	A3 ("SURNAME","SURNAME","text"),
 	A4 ("BIRTHDAY","BIRTHDAY","date"),

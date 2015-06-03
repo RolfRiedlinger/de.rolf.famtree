@@ -45,11 +45,6 @@ public class ViewControl {
 					+ "'";
 			first = 1;
 		}
-		if(query.getProperty("ID") != null){
-			sql += sqlExpression[first] + "ID"+ "='" + query.getProperty("ID")	+ "'";
-		}
-			
-		
 		System.out.println(sql);
 		return  addParents(queryDatabase(sql));
 	}
@@ -84,7 +79,8 @@ public class ViewControl {
 
 		while (pEnum.hasMoreElements()) {
 			String key = (String) pEnum.nextElement();
-			sql += key + "=" + "'" + myPerson.getProperty(key) + "',";
+			if(key != "ID") // ID muss in den where Zweig
+				sql += key + "=" + "'" + myPerson.getProperty(key) + "',";
 		}
 		sql = sql.substring(0, sql.length() - 1);
 
@@ -279,6 +275,7 @@ public class ViewControl {
 				person.setPartner(partner); 
 				
 				// So für jeden Eintrag in der Partnerliste werden jetzt die Child IDs bei der Datenbank abgefragt
+				// Die SQL muss noch verfeinert werden, weil die Hauptperson auch noch in die SQL hinein gefaltet werden muss 
 				for (Person key: partner){
 				sql = "SELECT ID from MASTERTABLE where FATHER_ID ="+key.getProperty("ID")+" OR MOTHER_ID = " + key.getProperty("ID");
 				rs = stmt.executeQuery(sql);

@@ -10,8 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 public class Person {
 	
 	private Properties myPerson;
-    private Properties personId;
-	
     private Person father=null;
     private Person mother=null;
     private List <Person> children = null; 
@@ -26,21 +24,12 @@ public class Person {
 	public Person(HttpServletRequest request) throws IOException{
 		// create a List Object . Person indeed is a Properties object
 		myPerson = new Properties();
-		personId = new Properties();
-		
-		
 		
 		for (AttributeNames aName : AttributeNames.values()){
 			String tmpName =  aName.getName();
 			if (request.getParameter(tmpName) != null)
 					myPerson.setProperty(tmpName, request.getParameter(tmpName));
 		}
-		// ID is not a person attribute, that can be modified 
-		// It is the unique ID provided by the database 
-		// therefore need to be handled differently, 
-		// used in update where clause to identify the correct record , that needs to be updated 
-		if (request.getParameter("ID") != null)
-			personId.setProperty("ID", request.getParameter("ID"));
 	}
 	
 	
@@ -49,15 +38,7 @@ public class Person {
 		// TODO Auto-generated constructor stub
 		
 		myPerson = new Properties();
-		personId = new Properties ();
 		
-		try {
-			if (rs.getString("ID") != null)
-				personId.setProperty("ID",rs.getString("ID"));
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
 		
 		for (AttributeNames aName : AttributeNames.values()){
 			String tmpName =  aName.getName();
@@ -76,8 +57,7 @@ public class Person {
 	public String toXMLString() throws IOException {
 		
 		String xmlString = "<description>"; 
-		xmlString += "<ID>"+ personId.getProperty("ID")+"</ID>";
-		
+
 		Enumeration<?> pEnum = myPerson.propertyNames();	
 		while(pEnum.hasMoreElements()){
 			String key = (String)pEnum.nextElement();
@@ -121,10 +101,6 @@ public class Person {
 		return myPerson.propertyNames();
 	}
 	public String getProperty(String key){
-		
-		if(key.equals("ID"))
-			return personId.getProperty(key);
-		else
 			return myPerson.getProperty(key);
 	}
 
