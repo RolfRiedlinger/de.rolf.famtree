@@ -73,27 +73,6 @@ var listOfPerson = {
 // mainPerson = the root person for this branch
 var mainPerson = null;
 
-// Das sind Menudaten aus der Branchview. 
-// Damit ist gespeichert was gedr�ckt wurde
-// MenuData ist Teil des Objektes Person. 
-var MenuData = function() {
-	// display ist true, wenn menu angezeigt wird. Nochmaliges clicken setzt den 
-	// den Wert wieder auf false. Dasmenu wird gel�scht. 
-	this.display = false;
-	// click speichert, ob irgendwas im Menu gew�hlt wurde 
-	this.clicked = false;
-
-};
-
-
-function resetMenuData() {
-	mainPerson.menu.display = false; 
-	mainPerson.father.menu.display = false;
-	mainPerson.mother.menu.display = false;
-	mainPerson.menu.clicked = false; 
-	mainPerson.father.menu.clicked = false;
-	mainPerson.mother.menu.clicked = false;
-};
 
 // numOfLevelMembers ist ein Array, was pro Level eines Baumes mit der ersten Person als root 
 // die Information speichert, wieviele Person sich auf gleicher stufe befinden 
@@ -127,27 +106,7 @@ var Person = function(node1,level) {
 	Object.defineProperties(this,
 
 	{
-		// Anchor: In dieser struktur werden Ankerpunkte
-		// sowie widht and height f�r die Person definiert
-		// Das wird in der branch view verwendet. 
-		"anchor" : {
-			set : function(val) {
-				this._anchor = val;
-			},
-			get : function() {
-				return this._anchor;
-			}
-		},
-		// menu: Hier wird f�r die branchview gespeochert. was ein Benutzer 
-		// gedr�ckt hat, siehe MenuData
-		"menu" : {
-			set : function(val) {
-				this._menu = val;
-			},
-			get : function() {
-				return this._menu;
-			}
-		},
+
 		// toRow: schreibt die Attribute der Person in eine html Tabellenzeile
 		// wird gerufen von listOfPerson.toTable
 		"toRow" : {
@@ -182,8 +141,6 @@ var Person = function(node1,level) {
 			}
 		},
 	});
-	// hier werden neue MenuDaten angelegt
-	this._menu = new MenuData();
 	
 	// Hier wird der XML stream geparsed
 	var description = node1.getElementsByTagName("description");
@@ -266,36 +223,11 @@ var Person = function(node1,level) {
 // in case mother and father of a branch are not defined
 var EmptyPerson = function() {
 
-	Object
-			.defineProperties(
-					this,
-
-					{
-
-						"anchor" : {
-							set : function(val) {
-								this._anchor = val;
-							},
-							get : function() {
-								return this._anchor;
-							}
-						},
-						"menu" : {
-							set : function(val) {
-								this._menu = val;
-							},
-							get : function() {
-								return this._menu;
-							}
-						},
-					});
-
 	for (key in attribute)
 		this[attribute[key]] = " ";
 	this.PRENAME = "unbekannt";
 	this.SURNAME = "";
 	this.LASTPROFESSION = "anklicken";
-	this.menu = new MenuData();
 	console.log(this);
 };
 
@@ -362,10 +294,10 @@ function searchForm() {
 // --------------------------------------------------------------------------------------------
 function createForm() {
 
-	// $("#upper_right").html("");
-	$("#dialog1bottom").html("");
+	$("#upper_right").html("");
+	// $("#dialog1bottom").html("");
 
-	var temp = "<table>";
+	var temp = "<H2> Neue Person anlegen </H2><table>";
 	
 	// Create fields for the attributes: 
 	// The first Element is the ID field - we skip this , the id is defined by
@@ -375,9 +307,11 @@ function createForm() {
 				+ "</td><td><input  class=updateform type=text name="
 				+ attribute[i] + " size=20></td></tr>";
 	}
-	temp += '</table>'; // <input type=button value=create
-						// onclick="createEntry()">';
-
+	temp += '</table>'; 
+	
+    temp += '<input type=button value=create  onclick="createEntry()">';
+    $("#upper_right").html(temp);
+	/*
 	$("#dialog1top").html(temp);
 	$("#dialog1").dialog("option", "title", "Neue Person anlegen");
 	$( "#dialog1" ).dialog( "option", "buttons", { 
@@ -386,22 +320,17 @@ function createForm() {
 	
 
 	$("#dialog1").dialog("open");
-
+	 */
 }
 // --------------------------------------------------------------------------------------------
 // Aux function: HTML content : edit or create person
 // called by: Menu entry "Person bearbeiten" in branch view 
 // --------------------------------------------------------------------------------------------
-function editOrCreatePerson(person) {
+function updateForm(person) {
 
-
-	// wenn empty Person, call the create Person Dialog
-	if (person.ID == " ") {
-		createForm();
-	}
-
-	// otherwise , prepare dialog for person's update
-	else {
+		if(person.ID == " ")
+			createForm();
+		else {
 		$("#dialog1top").html(person.toForm());
 		$("#dialog1bottom").html("");
 		$("#dialog1").dialog("option", "title", "Person Bearbeiten");
@@ -409,7 +338,7 @@ function editOrCreatePerson(person) {
 			 "Daten abschicken": function() {updateEntry(); $(this).dialog("close"); } 
 			} );
 		$("#dialog1").dialog("open");
-	}
+		}
 }
 // --------------------------------------------------------------------------------------------
 // Aux function: HTML content : search in Database
@@ -698,7 +627,7 @@ function setPersonOnClick() {
 		$(".updateClass").removeClass("green");
 		$(this).addClass("green");
 		mainPerson = listOfPerson.get(pos);
-		showMenu();
+		// showMenu();
 		showBranch();
 	});
 }
@@ -854,31 +783,17 @@ function processXMLResponse() {
 	}
 }
 // --------------------------------------------------------------------------------------------
-// Aux function: Additional Menu on the left side for tree views
+// Aux function: Menus in showbranch
 // --------------------------------------------------------------------------------------------
 //
-function showMenu() {
-	var temp = '<table class=coolmenu cellpadding=10> \
-				<tr><td  onmouseover="movein(this)" onmouseout=\
-						"moveout(this)" onclick="ancestorTree()">Vorfahren als Baum anzeigen</td>\
-				</tr>\
-				<tr><td onmouseover="movein(this)" onmouseout="moveout(this)" onclick=\
-				"searchForm()">Vorfahren als Schalen anzeigen</td></tr>\
-				<tr><td onmouseover="movein(this)" onmouseout="moveout(this)" onclick=\
-				"descendantTree()">Nachfahren als Baum  zeigen</td></tr></table>';
-	$("#menu2").html(temp);
-	
-	$("#coolmenu").height(120);
-	temp = '<button class=option  onclick="createForm()">Neuen Zweig erstellen</button> \
-			<button class=option  onclick="searchForm()">Person suchen</button> \
-			<button class=option>Hilfe</button>	\
-			<button class=option onclick="ancestorTree()">Baum der Vorfahren</button> \
-			<button class=option  onclick="descendantTree()">Baum der Nachfahren</button>';
-			
-	$("#coolmenu").html(temp);
-			
 
-};
+function showMenu2(clickedId){
+	$(clickedId).slideToggle();
+}
+function cleanMenu(clickedId){
+	var filter = ".submenu:not('"+ clickedId+"')";
+	$(filter).hide();
+}
 
 //--------------------------------------------------------------------------------------------
 //Aux function: descendantTree() 
@@ -1085,306 +1000,66 @@ function displayAncestorTree() {
 	$("#dialog1").dialog("open");
 }
 
-// --------------------------------------------------------------------------------------------
-// Aux function: D3 Grafics, Anchor point
-// Anchors are used in the branch view
-// --------------------------------------------------------------------------------------------
-//
-// Konstruktor f�r das Anchor Objekt
-//
-var Anchor = function(x, y, width, height) {
 
-	this.right = x;
-	this.left = x+width;
-	this.center = x+width/2;
-	
-	this.top = y;
-	this.middle = y+height/2;
-	this.bottom = y+ height;
-	
-	this.width = width; 
-	this.height = height;
-};
-// --------------------------------------------------------------------------------------------
-// Aux function: D3 grafics, Append Menu
-// append father and mother submenu in branch view
-// --------------------------------------------------------------------------------------------
-function appendMenu(panel, person) {
-
-	// Test, ob das menu noch in das Window passt
-	// by default wird das Menu rechts unten verschoben zum Person panel
-	// angezeigt
-	// der Schatten des Men�s ist um 55px verschoben
-	// Wenn das nicht geht, wird das Men� nach links unten verschoben
-	var dx = 50;
-	var dy = 50;
-	if (person.anchor.left + person.anchor.width + 55 >= width)
-		dx = -50;
-	// Zuerst den Schatten einf�gen
-	// er ist nochmal um 5 nach rechts und nach unten veschoben
-	var group = panel.append("g").attr("id", "gmenu").attr("transform",
-			"translate(" + dx + "," + dy + ")");
-
-	group.append("rect").attr("class", "panel").attr("width", 220).attr(
-			"height", person.anchor.height).attr("x", +5).attr("y", 5).attr(
-			"fill", "grey");
-	// Jetzt das Men� panel einf�gen
-	group.append("rect").attr("class", "panel").attr("width", 220).attr(
-			"height", person.anchor.height).attr("fill", "sienna");
-	// Hier kommt die Textbox f�r das Men�
-	// Schade dass hier nicht em als Einheit genommen werden kann
-	var textbox = group.append("g").attr("class", "menu").attr("transform",
-			"translate(" + (fontSize) + "," + (fontSize * 2) + ")")
-
-	.style("font-size", fontSize + "px").style("fill", "white");
-	// F�r die erste Menuezeile wird das Hintergrundrechteck eingef�gt
-	// Die Farbe richtet sich nach dem, ob der Men�punkt selected ist
-	textbox.append("rect").style("fill", function() {
-		return (person.menu.edit) ? "black" : "grey";
-	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
-			.attr("y", -fontSize - 5).attr("x", -5);
-	// hier kommt der text mit den highlight Functionen mouseover und mouseout
-	textbox.append("text").style("cursor", "pointer").text(
-			"Diese Person bearbeiten")
-	/*
-	 * .on("mouseover", function() { if(person.menu.edit == false){
-	 * person.menu.edit = true; showBranch(); } }).on("mouseout", function() {
-	 * if(person.menu.edit == true){ person.menu.edit = false; showBranch(); } })
-	 */
-	.on("click", function() {
-		person.menu.clicked = true;
-		editOrCreatePerson(person);
-	});
-	// F�r die zweite Menuezeile wird das Hintergrundrechteck eingef�gt
-	// Die Farbe richtet sich nach dem, ob der Men�punkt selected ist
-	textbox.append("rect").style("fill", function() {
-		return (person.menu.search) ? "black" : "grey";
-	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
-			.attr("y", 1 * fontSize - 5).attr("x", -5);
-	// hier kommt der text mit den highlight Functionen mouseover und mouseout
-	textbox.append("text").style("cursor", "pointer").attr("dy", "2.0em").text(
-			"In Datenbank suchen")
-	/*
-	 * .on("mouseover", function() { person.menu.search = true; showBranch();
-	 * }).on("mouseout", function() { person.menu.search = false; showBranch(); })
-	 */
-	.on("click", function() {
-		person.menu.clicked = true;
-		searchInDatabase(person);
-	});
-	// Dritte Men�zeile einf�gen
-	textbox.append("rect").style("fill", function() {
-		return (person.menu.branch) ? "black" : "grey";
-	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
-			.attr("y", 3 * fontSize - 5).attr("x", -5);
-	// hier kommt der text mit den highlight Functionen mouseover und mouseout
-	textbox.append("text").style("cursor", "pointer").attr("dy", "4.0em").text(
-			"Zweig dieser Person bearbeiten")
-
-	// .on("mouseover", movein(this))
-	// .on("mouseout", moveout(this))
-
-	.on("click", function() {
-		person.menu.clicked = true;
-		thisPerson2Main(person);
-	});
-
-}
 //--------------------------------------------------------------------------------------------
-//Aux function: D3 grafics, Append Menu
-//append mainPerson's submenu in branch view
+//Aux function: showBranch()
 //--------------------------------------------------------------------------------------------
-function appendMainPersonMenu(panel, person) {
 
-	// Test, ob das Menu noch in das Window passt
-	// by default wird das Menu rechts unten verschoben zum Person panel
-	// angezeigt
-	// der Schatten des Men�s ist um 55px verschoben
-	// Wenn das nicht geht, wird das Men� nach links unten verschoben
-	var dx = 50;
-	var dy = 50;
-	if (person.anchor.x + person.anchor.width + 55 >= width)
-		dx = -50;
-	// Zuerst den Schatten einf�gen
-	// er ist nochmal um 5 nach rechts und nach unten veschoben
-	var group = panel.append("g").attr("id", "gmenu").attr("transform",
-			"translate(" + dx + "," + dy + ")");
-
-	group.append("rect").attr("class", "panel").attr("width", 220).attr(
-			"height", person.anchor.height).attr("x", 5).attr("y", 5).attr(
-			"fill", "grey");
-	// Jetzt das Men� panel einf�gen
-	group.append("rect").attr("class", "panel").attr("width", 220).attr(
-			"height", person.anchor.height).attr("fill", "sienna");
-	// Hier kommt die Textbox f�r das Men�
-	// Schade dass hier nicht em als Einheit genommen werden kann
-	var textbox = group.append("g").attr("class", "menu").attr("transform",
-			"translate(" + (fontSize) + "," + (fontSize * 2) + ")")
-
-	.style("font-size", fontSize + "px").style("fill", "white");
-	// F�r die erste Menuezeile wird das Hintergrundrechteck eingef�gt
-	// Die Farbe richtet sich nach dem, ob der Men�punkt selected ist
-	textbox.append("rect").style("fill", function() {
-		return (person.menu.edit) ? "black" : "grey";
-	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
-			.attr("y", -fontSize - 5).attr("x", -5);
-	// hier kommt der text mit den highlight Functionen mouseover und mouseout
-	textbox.append("text").style("cursor", "pointer").text(
-			"Diese Person bearbeiten")
-	/*
-	 * .on("mouseover", function() { if(person.menu.edit == false){
-	 * person.menu.edit = true; showBranch(); } }).on("mouseout", function() {
-	 * if(person.menu.edit == true){ person.menu.edit = false; showBranch(); } })
-	 */
-	.on("click", function() {
-		person.menu.clicked = true;
-		editOrCreatePerson(person);
-	});
-	// F�r die zweite Menuezeile wird das Hintergrundrechteck eingef�gt
-	// Die Farbe richtet sich nach dem, ob der Men�punkt selected ist
-	textbox.append("rect").style("fill", function() {
-		return (person.menu.search) ? "black" : "grey";
-	}).style("stroke", "black").attr("width", 200).attr("height", 2 * fontSize)
-			.attr("y", 1 * fontSize - 5).attr("x", -5);
-	// hier kommt der text mit den highlight Functionen mouseover und mouseout
-	textbox.append("text").style("cursor", "pointer").attr("dy", "2.0em").text(
-			"Anderen Zweig bearbeiten")
-	/*
-	 * .on("mouseover", function() { person.menu.search = true; showBranch();
-	 * }).on("mouseout", function() { person.menu.search = false; showBranch(); })
-	 */
-	.on("click", function() {
-		person.menu.clicked = true;
-		searchInDatabase(person);
-	});
-
-}
-
-// --------------------------------------------------------------------------------------------
-// Aux function: D3 Grafics, create a person's panel for showbranch
-// --------------------------------------------------------------------------------------------
-function createPanel(panel, person) {
-	panel.append("rect") // Jetzt das Rechteck einf�gen
-	.attr("width", person.anchor.width).attr("height", person.anchor.height)
-			.attr("rx", 10).attr("ry", 5).on("click", function() {
-				var temp = person.menu.display;
-				// remove menus
-				resetMenuData();
-				d3.selectAll("#gmenu").remove();
-				person.menu.display = !temp;
-				if (person.menu.display == true) {
-					if (person == mainPerson)
-						appendMainPersonMenu(panel, mainPerson);
-					else
-						appendMenu(panel, person);
-				}
-			}).attr("fill", "Darkgreen");
-
-	var textbox = panel.append("g") // textbox hinzuf�gen
-	.attr("transform", "translate(" + fontSize + "," + (fontSize * 2) + ")") // Schade
-	// dass
-	// hier
-	// em
-	// nicht
-	// geht
-	.style("font-size", fontSize + "px").style("fill", "white");
-	textbox.append("text").text(person.PRENAME);
-	textbox.append("text").attr("dy", "1.5em").text(person.SURNAME);
-	textbox.append("text").attr("dy", "3.0em").text(person.LASTPROFESSION);
-	panel.attr("transform", "translate(" + person.anchor.right + ","
-			+ person.anchor.top + ")");
-	return;
-}
-var zaehler = 0;
-// --------------------------------------------------------------------------------------------
-// Aux function: D3 Grafics, showBranch(number)
-// --------------------------------------------------------------------------------------------
-function showBranch() {
+function showBranch(){
 	
-	// we draw a new branch , reset the menu options
-	resetMenuData();
-
-	$("#upper_right").html("");
-	if (mainPerson == undefined)
-		console.log("ShowBranch undefined mainPerson" + (zaehler));
-	var holder = d3.select("#upper_right") // select the 'upper right' element
-	.append("svg") // Grafik Element in upper_right platzieren
-	.attr("width", width + margin.left + margin.right).attr("height",
-			height + margin.top + margin.bottom)
-	.attr("class", "chart")
-	.append("g") // im Grafik element eine Gruppe platzieren, dieses wird an 	// holder zur�ckgegeben
-	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-	// Anchorpoints und Ma�e ausrechnen f�r die Linien
-	// und f�r die Platzierung der Panels
-
-	var panelWidth = 20 * fontSize * .5;
-	var panelHeight= (4 + 3.4) * fontSize;
+	// hier werden die Menueoptionen für Vorfahrenbaum und NAchfahrenbaum aktiviert
+	// denn jetzt ist eine Person selektiert für die ein Baum bestimmt werden kann 
+	$(".option2").removeProp("disabled");
+	$(".option2").addClass("option");
+	$(".option2").removeClass("option2");
 	
-	mainPerson.anchor =  new Anchor(0.5 * width-panelWidth/2, 0.4 * height - panelHeight / 2, panelWidth, panelHeight);
-	mainPerson.father.anchor = new Anchor(0, 0, panelWidth,panelHeight);
-	mainPerson.mother.anchor = new Anchor(width-panelWidth, 0, panelWidth, panelHeight);
-	mainPerson.partner.anchor = new Anchor(0.5 * width-panelWidth/2, 0.4 * height + panelHeight, panelWidth, panelHeight);
-
-	// Hier die Linien zeichnen, damit sie unter den Menu panels liegen
-	// ==================================================================
-	holder
-			.append("polyline")
-			.style("stroke", "grey")
-			.style("fill", "none")
-			.attr(
-					"points",
-					(mainPerson.father.anchor.left)+ ","+ (mainPerson.father.anchor.middle)
-							+ ","
-							+ (mainPerson.anchor.center-10) + "," + (mainPerson.father.anchor.middle)
-							+ ","
-							+ (mainPerson.anchor.center-10) + "," + mainPerson.anchor.top);
-	holder
-			.append("polyline")
-			.style("stroke", "grey")
-			.style("fill", "none")
-			.attr(
-					"points",
-					(mainPerson.mother.anchor.right) + ","+ (mainPerson.mother.anchor.middle)
-							+ ","
-							+ (mainPerson.anchor.center+10)+ ","	+ (mainPerson.mother.anchor.middle)
-							+ ","
-							+ (mainPerson.anchor.center+ 10) + "," + mainPerson.anchor.middle);
-
-	holder
-	.append("polyline")
-	.style("stroke", "grey")
-	.style("fill", "none")
-	.attr(
-			"points",
-			(mainPerson.anchor.center) + ","+ (mainPerson.anchor.bottom)
-					+ ","
-					+ (mainPerson.anchor.center)+ ","	+ (mainPerson.partner.anchor.top));
-	// Jetzt die panels zeichnen f�r Person, vater und Mutter
-	// falls menu == true ist, dann auch menue zeichnen
-	// =================================================================
-		
-	// Panel f�r die Hauptperson
-	var panel = holder.append("g");
-	createPanel(panel, mainPerson);
-	// Panel f�r den Vater der Person
-	panel = holder.append("g");
-	createPanel(panel, mainPerson.father);
-	// �berschrift "Vater" setzen
-	panel.append("text").attr("dx", panelWidth / 2).attr("dy", -10).attr(
-			"font-style", "italic").attr("text-anchor", "middle").text("Vater");
-	panel = holder.append("g");
-	createPanel(panel, mainPerson.mother);
-	// �berschrift "Mutter"
-	panel.append("text").attr("dx", panelWidth / 2).attr("dy", -10).attr(
-			"font-style", "italic").attr("text-anchor", "middle")
-			.text("Mutter");
-	panel = holder.append("g");
-	createPanel(panel, mainPerson.partner);
-	// �berschrift "Partner"
-	panel.append("text").attr("dy", -10).attr(
-			"font-style", "italic").attr("text-anchor", "left")
-			.text("Partner");
+	// Jetzt muss das upper_right div Elemnt mit der default Ansicht eines Zweiges gefüllt werden 
+	var tempString = ' \
+	<H1>Familienzweig von ' + mainPerson.PRENAME + ' ' + mainPerson.SURNAME + '</H1><p>  \
+	<div id=parents> \
+	<div class=panel id=father onmouseenter=cleanMenu("#fathermenu") onclick=showMenu2("#fathermenu")>Vater </div> \
+	<div class=submenu id=fathermenu hidden></div> \
+	<div id=line1></div> \
+	<div id=line2></div> \
+	<div class=panel id=mother onmouseenter=cleanMenu("#mothermenu") onclick=showMenu2("#mothermenu")>Mutter</div> \
+	<div class=submenu id=mothermenu hidden>\
+	<ul> \
+	<li onclick= updateForm(mainPerson.mother) > Daten dieser Person bearbeiten </li>\
+	<li> Andere Person aus Datenbank als Mutter setzen </li>\
+	<li> Neue Person als Mutter anlegen </li></ul>\
+	</div> \
+	<div id=line3></div> \
+	<div id=line4></div> \
+	</div> \
+	<div id=personandpartner> \
+	<div class=panel id=mainperson onmouseenter=cleanMenu("#personmenu") onclick = showMenu2("#personmenu")>Person	</div> \
+	<div class=submenu id=personmenu hidden></div> \
+	<img id = partnerlink src=rings.png width = 20px height = 10px> \
+	<div class=panel id=partner>Partner</div> \
+	</div> \
+	</div> \
+	';
+	$("#upper_right").html(tempString);
+	
+	// Panels mit Daten füllen 
+	$("#father").html(mainPerson.father.PRENAME+ "<br>" + mainPerson.father.SURNAME +"<br>" + mainPerson.father.BIRTHDAY +"<br>" + mainPerson.father.LASTPROFESSION);
+	$("#mother").html(mainPerson.mother.PRENAME+"<br> " + mainPerson.mother.SURNAME + "<br> " + mainPerson.mother.BIRTHDAY + "<br> " + mainPerson.mother.LASTPROFESSION);
+	$("#mainperson").html(mainPerson.PRENAME+"<br> " + mainPerson.SURNAME + "<br> " + mainPerson.BIRTHDAY + "<br> " + mainPerson.LASTPROFESSION);
+	
+	
+	// Die Panel-width passt sich dem Text an, daher müssen jetzt die Verbindungslinien justiert werden 
+	// momentan wird nur das Vaterpanel herangezogen. 
+	// Das default Vaterpanel hat eine Länge von 172px. dazu gehört die Länge von 86px der Linie1. Zunächst werden die aktuelle Länge des Vaterpanels bestimmt
+	// Danach die Linie1 justiert. Das reicht, denn linie2 fügt sich automatisch richtig ein durch floating layout. 
+	var parentWidth = $("#father").outerWidth(true);
+	var diff = 172-parentWidth;
+	$("#line1").outerWidth(diff+86);
+	// Die vertikale Linie 3 muss auch justiert werden . Linie 4 fügt sich richtig einaufgrund des floating layouts. 
+	$("#line3").css({"margin-left": diff +86-5});
+	
+	$("#partner").html("parentWidth: "+ parentWidth +  "New lineWidth: " + $("#line1").outerWidth());
+	
+	
 	
 }
 
