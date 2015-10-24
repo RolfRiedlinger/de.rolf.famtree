@@ -12,32 +12,42 @@
 <link href=famtree.css type=text/css rel=stylesheet />
 </head>
 <body>
-<div class=main1 id=header><h1>Familien Stammbaum 2</h1></div>
-<div class=main1 id=mysearch><label>Schnellsuche
-<input type="search" name="quicksearch" size=15 onkeyup=quickSearch() ></label></div>
+<div class=main1 id=header><h1>Familien Stammbaum </h1></div>
 <div class=main1 id=coolmenu> 
-	<button class = option  onclick="createForm()"">Neuen Zweig erstellen</button>
-	<button class= option  onclick="searchForm()"">Person suchen</button>
-	<button type="button" class= option2  onclick="ancestorTree()" disabled>Baum der Vorfahren</button> 
-	<button type="button" class= option2  onclick="descendantTree()" disabled>Baum der Nachfahren</button>
+	<button class = option  onclick="createForm('new')">Neuen Zweig erstellen</button>
+	<button class= option  onclick="searchForm()">Person suchen</button>
 	<button class = option>Hilfe</button>
 </div>
-<div id=secondline>
-<div class=main1 id=footer2> Searchresult</div>
+<div class= submenu id=fathermenu hidden> 
+	<button class = option  id=editfather>Daten des Vaters bearbeiten </button>
+	<button class = option  id=father2main>Zweig des Vaters anzeigen </button>
+	<button class = option  id=searchfather>Andere Person als Vater eintragen</button>
+	<button class = option  onclick="createForm('fathermenu')">Neue Person als Vater anlegen</button>
 </div>
+<div class=submenu id=mothermenu hidden> 
+	<button class = option  onclick="createForm('new')">Daten der Mutter bearbeiten </button>
+	<button class = option  onclick="createForm('new')">Zweig der Mutter anzeigen </button>
+	<button class = option  onclick="createForm('new')">Andere Person aus Datenbank als Mutter setzen</button>
+	<button class = option  onclick="createForm('new')">Neue Person als Mutter anlegen</button>
+</div>
+<div class=submenu id=mainpersonmenu hidden> 
+	<button class = option  onclick="createForm('new')">Daten der Person bearbeiten </button>
+	<button class = option  onclick="createForm('new')">Anderen Zweig anzeigen </button>
+	<button class= option  onclick="ancestorTree()" >Baum der Vorfahren</button> 
+	<button class= option  onclick="descendantTree()" >Baum der Nachfahren</button>	
+</div>
+
+<!-- <div class=main1 id=footer2> Searchresult</div> -->
+
 <div class=main1 id=upper_right>
 <H1>Legende Familienzweig </H1><p> 
 <div id=parents>
-<div class=panel id=father>Vater </div>
-<div id=line1></div>
-<div id=line2></div>
-<div class=panel id=mother>Mutter</div>
-<div id=line3></div>
-<div id=line4></div>
+<div class=panel id=fathercontainer>Vater </div>
+<div class=panel id=mothercontainer>Mutter</div>
 </div>
 <div id=personandpartner>
-<div class=panel id=mainperson>Person</div>
-<img id = partnerlink src=rings.png width = 20px height = 10px>
+<div class=panel id=mainpersoncontainer>Person</div>
+<img id = partnerlink src=rings.png>
 <div class=panel id=partner>Partner</div>
 </div>
 </div>

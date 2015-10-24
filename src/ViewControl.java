@@ -2,7 +2,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -13,8 +12,8 @@ import javax.sql.DataSource;
 public class ViewControl {
 
 	private List<Person> searchresult = new ArrayList<Person>();
-	
-	
+	private List<PartnerRelation> partnerRelationList = new ArrayList<PartnerRelation>();
+
 	public List<Person> quickSearchPerson(Person query) {
 		int first = 0;
 		String[] sqlExpression = { " WHERE ", " OR" };
@@ -29,7 +28,8 @@ public class ViewControl {
 		}
 
 		System.out.println(sql);
-		return addParents(queryDatabase(sql));
+
+		return addParents(addPartnerRelation(queryDatabase(sql)));
 	}
 
 	public List<Person> searchPerson(Person query) {
@@ -41,12 +41,12 @@ public class ViewControl {
 
 		while (pEnum.hasMoreElements()) {
 			String key = (String) pEnum.nextElement();
-			sql += sqlExpression[first] + key + "='" + query.getProperty(key)
-					+ "'";
+			sql += sqlExpression[first] + key + " LIKE '%" + query.getProperty(key)
+					+ "%'";
 			first = 1;
 		}
 		System.out.println(sql);
-		return  addParents(queryDatabase(sql));
+		return addParents(addPartnerRelation(queryDatabase(sql)));
 	}
 
 	public int createPerson(Person myPerson) {
@@ -69,7 +69,7 @@ public class ViewControl {
 		return callDatabase(sql);
 
 	}
-	
+
 	public int updatePerson(Person myPerson) {
 		// TODO Auto-generated method stub
 
@@ -79,7 +79,7 @@ public class ViewControl {
 
 		while (pEnum.hasMoreElements()) {
 			String key = (String) pEnum.nextElement();
-			if(key != "ID") // ID muss in den where Zweig
+			if (key != "ID") // ID muss in den where Zweig
 				sql += key + "=" + "'" + myPerson.getProperty(key) + "',";
 		}
 		sql = sql.substring(0, sql.length() - 1);
@@ -92,9 +92,73 @@ public class ViewControl {
 
 	}
 
-	
+	private List<Person> addPartnerRelation(List<Person> pList) {
+		// TODO Auto-generated method stub
+
+		for (Person key : pList) {
+			String myId = key.getProperty("ID");
+			key.setPartnerRelations(queryPartnerRelation(myId));
+		}
+		;
+
+		return pList;
+	}
+
+	private List<PartnerRelation> queryPartnerRelation(String myId) {
+		// TODO Auto-generated method stub
+		String sql = "SELECT ID from MASTERTABLE where ID in (SELECT ID1 from PARTNERTABLE WHERE ID2="
+				+ myId
+				+ ") or ID in (Select ID2 from PARTNERTABLE where ID1="
+				+ myId + ")";
+
+		List<String> partnerIds = new ArrayList<String>();
+
+		Connection con;
+		Statement stmt;
+		try {
+			Context initContext = new InitialContext();
+			DataSource ds = (DataSource) initContext
+					.lookup("java:comp/env/jdbc/fmtreedb");
+			// Get a database connection
+			con = ds.getConnection();
+
+			// Prepare a statement object used to execute query
+			stmt = con.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+
+			if (rs.isBeforeFirst() == true) {
+				// Es gibt überhaupt PartnerIDs
+				while (rs.next()) {
+					partnerIds.add(rs.getString("ID"));
+				}
+				for (String key : partnerIds) {
+
+					sql = "SELECT STATUS, SINCE FROM partnertable WHERE (ID1="
+							+ myId + " OR ID1 =" + key + ")" + " and ( ID2 = "
+							+ myId + "  or ID2 = " + key + ")";
+					rs = stmt.executeQuery(sql);
+
+					if (rs.isBeforeFirst() == true) {
+							PartnerRelation myRelation = new PartnerRelation(getPersonFromMastertable(key),rs);
+							partnerRelationList.add(myRelation);
+					}
+				}
+			}
+			// Das Resultset ist prozessiert , es kann geschlossen werden
+			rs.close();
+			stmt.close();
+			con.close();
+		} catch (java.lang.Exception e) {
+			e.printStackTrace();
+			System.err.print(e.getClass().getName());
+			System.err.println(e.getMessage());
+
+		}
+		return partnerRelationList;
+	}
 
 	private List<Person> queryDatabase(String sql) {
+
 		Connection con;
 		Statement stmt;
 		try {
@@ -113,7 +177,9 @@ public class ViewControl {
 				Person myPerson = new Person(rs);
 				searchresult.add(myPerson);
 			}
-			// Das Resultset ist prozessiert , es kann geschlossen werden 
+
+			
+			// Das Resultset ist prozessiert , es kann geschlossen werden
 			rs.close();
 			stmt.close();
 			con.close();
@@ -126,66 +192,13 @@ public class ViewControl {
 		return searchresult;
 	}
 	
-	private List<Person> addParents(List<Person> pList) {
+	// internal aux function to get personData from MAstertable
+	private Person getPersonFromMastertable(String id) {
+		String sql = "SELECT * from MASTERTABLE where ID='"+id+"'";
+		
+		Person myPerson = null;
 		Connection con;
 		Statement stmt;
-		try {
-			Context initContext = new InitialContext();
-			DataSource ds = (DataSource) initContext
-					.lookup("java:comp/env/jdbc/fmtreedb");
-			// Get a database connection
-			con = ds.getConnection();
-			stmt = con.createStatement();
-		
-		for(Person key : pList) {
-			String ancestorId= key.getProperty("FATHER_ID");
-			if (ancestorId != null) {
-				String sql = "Select * from MASTERTABLE where ID='"
-						+ ancestorId + "'";
-				System.out.println(sql);
-				ResultSet rs = stmt.executeQuery(sql);
-				while (rs.next()) {
-						key.setFather(new Person(rs));	
-				}
-				rs.close();	
-			};
-			ancestorId= key.getProperty("MOTHER_ID");
-			if (ancestorId != null) {
-				String sql = "Select * from MASTERTABLE where ID='"
-						+ ancestorId + "'";
-				System.out.println(sql);
-				ResultSet rs = stmt.executeQuery(sql);
-				while (rs.next()) {
-						key.setMother(new Person(rs));	
-				}
-				rs.close();
-				
-			}
-			
-		}
-		stmt.close();	
-		con.close();
-	} catch (java.lang.Exception e) {
-		e.printStackTrace();
-		System.err.print(e.getClass().getName());
-		System.err.println(e.getMessage());
-
-	}
-		return pList;
-	}
-	
-	// Das sind die Methoden für den Baum der Vorfahren 
-	// ---------------------------------------------------
-	public Person getAncestorTreeFromDB(Person query){
-		String id = query.getProperty("ID");
-		return getAncestor(id);		
-	};
-		
-	private Person getAncestor(String id){
-		String sql = "SELECT * from MASTERTABLE where ID="+id;
-		Connection con;
-		Statement stmt;
-		Person person = null;
 		try {
 			Context initContext = new InitialContext();
 			DataSource ds = (DataSource) initContext
@@ -196,11 +209,11 @@ public class ViewControl {
 			// Prepare a statement object used to execute query
 			stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
-			
-			while (rs.next()) {
-				person = new Person(rs);		
+			if(rs.isBeforeFirst()){
+				rs.next();
+				myPerson = new Person(rs);
 			}
-			// Das Resultset ist prozessiert , es kann geschlossen werden 
+						// Das Resultset ist prozessiert , es kann geschlossen werden
 			rs.close();
 			stmt.close();
 			con.close();
@@ -210,47 +223,145 @@ public class ViewControl {
 			System.err.println(e.getMessage());
 
 		}
-		String ancestorId= person.getProperty("FATHER_ID");
-		if (ancestorId != null) {
-			person.setFather(getAncestor(ancestorId));	
-		};
-		ancestorId= person.getProperty("MOTHER_ID");
-		if (ancestorId != null) {
-			person.setMother(getAncestor(ancestorId));	
-		
-		}	
-		return person;
+		return myPerson;
 	}
-	/*  Hier kommt die Methode für den Baum der Nachfahren 
-	    Die Liste von children wird ebenfalls rekursiv befüllt. Die Funktion Person getChild(String Id) macht: 
-		1.	Get Person Details from Database. “Select *from MASTERTABLE where ID=Id 
-		2.	Get all IDs, where Father_ID or Mother_ID is set to this Person’s ID . In SQL 
-		select ID from MasterTable where (FATHER_ID = Id or MOTHER_ID = Id)
-		3.	Für jede ID von 2.  Füge das Resultat des Rekursiven Aufrufs von getChild(String Id) an das ListenObjekt children. 
-	*/
-	public Person getDescendantTreeFromDB(Person query){
+
+	private List<Person> addParents(List<Person> pList) {
+			for (Person key : pList) {
+				key.setFather(getPersonFromMastertable(key.getProperty("FATHER_ID")));
+				key.setMother(getPersonFromMastertable(key.getProperty("MOTHER_ID")));	
+			}
+			return pList;
+	}
+
+	// Das sind die Methoden für den Baum der Vorfahren
+	// ---------------------------------------------------
+	public Person getAncestorTreeFromDB(Person query) {
 		String id = query.getProperty("ID");
-		return getChild(id);		
+		return getAncestor(id);
 	};
 
-/* ==================================================================================================
- * Old code: Das benutzt noch die Vorgehensweise über die Partnerliste
- * 
- ==================================================================================================
-	private Person getChild(String id){
+	private Person getAncestor(String id) {
 		
-		//hier bereite ich die SQL für Schritt eins vor. Die Details der Hauptperson in dieser 
+		Person person = getPersonFromMastertable(id);
+		
+		String ancestorId = person.getProperty("FATHER_ID");
+		if (ancestorId != null) {
+			person.setFather(getAncestor(ancestorId));
+		}
+		;
+		ancestorId = person.getProperty("MOTHER_ID");
+		if (ancestorId != null) {
+			person.setMother(getAncestor(ancestorId));
+
+		}
+		return person;
+	}
+
+	/*
+	 * Hier kommt die Methode für den Baum der Nachfahren Die Liste von children
+	 * wird ebenfalls rekursiv befüllt. Die Funktion Person getChild(String Id)
+	 * macht: 1. Get Person Details from Database. “Select *from MASTERTABLE
+	 * where ID=Id 2. Get all IDs, where Father_ID or Mother_ID is set to this
+	 * Person’s ID . In SQL select ID from MasterTable where (FATHER_ID = Id or
+	 * MOTHER_ID = Id) 3. Für jede ID von 2. Füge das Resultat des Rekursiven
+	 * Aufrufs von getChild(String Id) an das ListenObjekt children.
+	 */
+	public Person getDescendantTreeFromDB(Person query) {
+		String id = query.getProperty("ID");
+		return getChild(id);
+	};
+
+	/*
+	 * ==========================================================================
+	 * ======================== Old code: Das benutzt noch die Vorgehensweise
+	 * über die Partnerliste
+	 * 
+	 * ==========================================================================
+	 * ======================== private Person getChild(String id){
+	 * 
+	 * //hier bereite ich die SQL für Schritt eins vor. Die Details der
+	 * Hauptperson in dieser // Iteration werden von der datenbank geholt.
+	 * String sql = "SELECT *from MASTERTABLE where ID="+id; Connection con;
+	 * Statement stmt; Person person = null; List <Person> partner = new
+	 * ArrayList<Person>(); // Das ist die Liste der Partner der aktuellen
+	 * (Haupt)-Person List <String> childIds = null; // Das ist die Liste der
+	 * childIds pro Partner . Ich speichere diese zwischen List <Person>
+	 * children = new ArrayList<Person>(); // Das ist die Liste der Kinder als
+	 * Personen, sie werden rekursiv generiert. HashMap <Person,List<String>>
+	 * myHash = new HashMap<Person, List<String>>(); // Das ist eine Hashmap um
+	 * die Liste der childIds pro Partner zu speichern
+	 * 
+	 * // start der datenbank Operationen mit try catch umgeben. try { Context
+	 * initContext = new InitialContext(); DataSource ds = (DataSource)
+	 * initContext .lookup("java:comp/env/jdbc/fmtreedb"); // Get a database
+	 * connection con = ds.getConnection();
+	 * 
+	 * // Prepare a statement object used to execute query stmt =
+	 * con.createStatement(); ResultSet rs = stmt.executeQuery(sql); // 1. das
+	 * sind die Details der aktuellen Person while (rs.next()) { person = new
+	 * Person(rs); } // 2. Bestimme Partner der aktuellen (Haupt-)person sql=
+	 * "SELECT * from MASTERTABLE WHERE ID in (SELECT  DISTINCT MOTHER_ID FROM MASTERTABLE"
+	 * + " WHERE FATHER_ID="+id+
+	 * ") OR ID in  (SELECT  DISTINCT FATHER_ID FROM MASTERTABLE " +
+	 * " WHERE MOTHER_ID="+id+")"; System.out.println("Partner for Id:" + id
+	 * +":"+ sql); rs = stmt.executeQuery(sql); // wenn Partner vorhanden sind,
+	 * dann Partner zur Liste hinzufügen if (rs.isBeforeFirst() ) { while
+	 * (rs.next()) { partner.add(new Person(rs)); } person.setPartner(partner);
+	 * 
+	 * // So für jeden Eintrag in der Partnerliste werden jetzt die Child IDs
+	 * bei der Datenbank abgefragt // Die SQL muss noch verfeinert werden, weil
+	 * die Hauptperson auch noch in die SQL hinein gefaltet werden muss for
+	 * (Person key: partner){ sql =
+	 * "SELECT ID from MASTERTABLE where FATHER_ID ="
+	 * +key.getProperty("ID")+" OR MOTHER_ID = " + key.getProperty("ID"); rs =
+	 * stmt.executeQuery(sql); if (rs.isBeforeFirst() ) { childIds = new
+	 * ArrayList<String>(); while (rs.next()) {
+	 * childIds.add(rs.getString("ID")); } // Das Ergebnis wird jetzt in einer
+	 * Hashmap zwischen gespeichert // Für jeden Partner mit dem dieHauptperson
+	 * Kinder hat, wird ein Entry in der Hashmap erzeugt myHash.put(key,
+	 * childIds); } }
+	 * 
+	 * } rs.close(); stmt.close(); con.close(); } catch (java.lang.Exception e)
+	 * { e.printStackTrace(); System.err.print(e.getClass().getName());
+	 * System.err.println(e.getMessage());
+	 * 
+	 * } // so jetzt muss hier noch der rekursive Aufruf rein für die Liste der
+	 * Child Ids. // Für jeden Partner werden jetzt die Kinder rekursiv
+	 * bestimmt. for (Person key: myHash.keySet()){ List <String> childIdList =
+	 * myHash.get(key); children = new ArrayList<Person>(); for (String myId:
+	 * childIdList){ children.add(getChild(myId)); } key.setChildren(children);
+	 * }
+	 * 
+	 * return person;
+	 * 
+	 * 
+	 * }
+	 * ========================================================================
+	 * ==========================
+	 */
+	private Person getChild(String id) {
+
+		// hier bereite ich die SQL für Schritt eins vor. Die Details der
+		// Hauptperson in dieser
 		// Iteration werden von der datenbank geholt.
-		String sql = "SELECT *from MASTERTABLE where ID="+id;
+		String sql = "SELECT *from MASTERTABLE where ID=" + id;
 		Connection con;
 		Statement stmt;
 		Person person = null;
-		List <Person> partner = new ArrayList<Person>();    // Das ist die Liste der Partner der aktuellen (Haupt)-Person 	
-		List <String> childIds = null;                      // Das ist die Liste der childIds pro Partner . Ich speichere diese zwischen
-		List <Person> children = new ArrayList<Person>();   // Das ist die Liste der Kinder als Personen, sie werden rekursiv generiert.
-		HashMap <Person,List<String>> myHash = new HashMap<Person, List<String>>(); // Das ist eine Hashmap um die Liste der childIds pro Partner zu speichern
-		
-		// start der datenbank Operationen mit try catch umgeben. 
+
+		List<String> childIds = new ArrayList<String>(); // Das ist die Liste
+															// der childIds pro
+															// Partner . Ich
+															// speichere diese
+															// zwischen
+		List<Person> children = new ArrayList<Person>(); // Das ist die Liste
+															// der Kinder als
+															// Personen, sie
+															// werden rekursiv
+															// generiert.
+
+		// start der datenbank Operationen mit try catch umgeben.
 		try {
 			Context initContext = new InitialContext();
 			DataSource ds = (DataSource) initContext
@@ -261,121 +372,37 @@ public class ViewControl {
 			// Prepare a statement object used to execute query
 			stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
-			// 1. das sind die Details der aktuellen Person 
+			// 1. das sind die Details der aktuellen Person
 			while (rs.next()) {
-				person = new Person(rs);		
+				person = new Person(rs);
 			}
-			// 2. Bestimme Partner der aktuellen (Haupt-)person
-			sql="SELECT * from MASTERTABLE WHERE ID in (SELECT  DISTINCT MOTHER_ID FROM MASTERTABLE"
-					+ " WHERE FATHER_ID="+id+") OR ID in  (SELECT  DISTINCT FATHER_ID FROM MASTERTABLE "
-					+ " WHERE MOTHER_ID="+id+")";
-			System.out.println("Partner for Id:" + id +":"+ sql);
+			// Für die Person werden jetzt alle child ids generiert
+			sql = "SELECT ID from MASTERTABLE WHERE FATHER_ID=" + id
+					+ " OR MOTHER_ID=" + id;
 			rs = stmt.executeQuery(sql);
-			// wenn Partner vorhanden sind, dann Partner zur Liste hinzufügen 
-			if (rs.isBeforeFirst() ) {    
-				while (rs.next()) {
-				partner.add(new Person(rs));
-				}
-				person.setPartner(partner); 
-				
-				// So für jeden Eintrag in der Partnerliste werden jetzt die Child IDs bei der Datenbank abgefragt
-				// Die SQL muss noch verfeinert werden, weil die Hauptperson auch noch in die SQL hinein gefaltet werden muss 
-				for (Person key: partner){
-				sql = "SELECT ID from MASTERTABLE where FATHER_ID ="+key.getProperty("ID")+" OR MOTHER_ID = " + key.getProperty("ID");
-				rs = stmt.executeQuery(sql);
-				if (rs.isBeforeFirst() ) {    
-					childIds = new ArrayList<String>();
+			if (rs.isBeforeFirst()) {
+
 				while (rs.next()) {
 					childIds.add(rs.getString("ID"));
 				}
-				// Das Ergebnis wird jetzt in einer Hashmap zwischen gespeichert
-				// Für jeden Partner mit dem dieHauptperson Kinder hat, wird ein Entry in der Hashmap erzeugt
-				myHash.put(key, childIds);
-				}
-				}
-				
 			}
 			rs.close();
-			stmt.close();	
-			con.close();
-		} catch (java.lang.Exception e) {
-			e.printStackTrace();
-			System.err.print(e.getClass().getName());
-			System.err.println(e.getMessage());
-
-		}
-		// so jetzt muss hier noch der rekursive Aufruf rein für die Liste der Child Ids. 
-		// Für jeden Partner werden jetzt die Kinder rekursiv bestimmt. 
-		for (Person key: myHash.keySet()){
-			List <String> childIdList = myHash.get(key);
-			children = new ArrayList<Person>();
-			for (String myId: childIdList){
-				children.add(getChild(myId));
-			}
-			key.setChildren(children);
-		}
-		
-		return person;
-		
-		
-	}
-==================================================================================================*/
-	private Person getChild(String id){
-		
-		//hier bereite ich die SQL für Schritt eins vor. Die Details der Hauptperson in dieser 
-		// Iteration werden von der datenbank geholt.
-		String sql = "SELECT *from MASTERTABLE where ID="+id;
-		Connection con;
-		Statement stmt;
-		Person person = null;
-
-		List <String> childIds = new ArrayList<String>();   // Das ist die Liste der childIds pro Partner . Ich speichere diese zwischen
-		List <Person> children = new ArrayList<Person>();   // Das ist die Liste der Kinder als Personen, sie werden rekursiv generiert.
-	
-		
-		// start der datenbank Operationen mit try catch umgeben. 
-		try {
-			Context initContext = new InitialContext();
-			DataSource ds = (DataSource) initContext
-					.lookup("java:comp/env/jdbc/fmtreedb");
-			// Get a database connection
-			con = ds.getConnection();
-
-			// Prepare a statement object used to execute query
-			stmt = con.createStatement();
-			ResultSet rs = stmt.executeQuery(sql);
-			// 1. das sind die Details der aktuellen Person 
-			while (rs.next()) {
-				person = new Person(rs);		
-			}
-			// Für die Person werden jetzt alle child ids generiert
-			sql = "SELECT ID from MASTERTABLE WHERE FATHER_ID=" + id +" OR MOTHER_ID="+id;
-			rs = stmt.executeQuery(sql);
-			if (rs.isBeforeFirst() ) {    
-		
-			while (rs.next()) {
-				childIds.add(rs.getString("ID"));
-			}
-			}
-			rs.close();
-			stmt.close();	
+			stmt.close();
 			con.close();
 		} catch (java.lang.Exception e) {
 			e.printStackTrace();
 			System.err.print(e.getClass().getName());
 			System.err.println(e.getMessage());
 		}
-		if(!childIds.isEmpty()){
-			for (String myId: childIds){
+		if (!childIds.isEmpty()) {
+			for (String myId : childIds) {
 				children.add(getChild(myId));
 			}
-		person.setChildren(children);
+			person.setChildren(children);
 		}
 		return person;
 	}
-			
-	
-	
+
 	private int callDatabase(String sql) {
 		Connection con;
 		Statement stmt;
@@ -402,6 +429,5 @@ public class ViewControl {
 		return rc;
 
 	}
-
 
 }

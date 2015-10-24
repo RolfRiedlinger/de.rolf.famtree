@@ -142,6 +142,7 @@ var Person = function(node1,level) {
 		},
 	});
 	
+	
 	// Hier wird der XML stream geparsed
 	var description = node1.getElementsByTagName("description");
 	if (description != null && description.length > 0) {
@@ -182,13 +183,24 @@ var Person = function(node1,level) {
 			this.children[0] = this.mother;
 		} else
 			this.children[1] = this.mother;
+		nextTag = nextTag.nextSibling;
 	} else
 		this.mother = new EmptyPerson();
 	
 	
 	// Hier kommt der aktuelle Partner rein 
-	this.partner = new EmptyPerson();
+	// Der wird in dem Tag Relation hinterlegt
+	// Beim der Stammbaum view gibt es auch die Möglichkeit den Partner mit anzuzeigen, 
+	// das habe ich aber derzeit ausgebaut 
+	// 
+	if(nextTag != null && nextTag.nodeName == "RELATION"){
+		this.partner = new Person(nextTag,level+1);
+	}
+	else
+		this.partner = new EmptyPerson();
 
+	
+	
 	// / Hier kommt der Parser code wenn der Nachfahren Tree angefragt wurde
 	// Dessen Struktur kommt als Person -Partner - Child --was alles auf das
 	// Children Feld gemappt wird
@@ -275,13 +287,15 @@ function personListHeader() {
 // --------------------------------------------------------------------------------------------
 function searchForm() {
 
-	var temp = "<H2> Personensuche </H2> <table>";
+	$(".submenu").hide();
+	var temp = "<div id=search><H2> Personensuche </H2> <table>";
 	for (var i = 0; i < attribute.length; i++) {
 		temp += "<tr><td>" + label[i] + "</td><td><input type=text name="
-				+ attribute[i] + " size=20></td></tr>";
+				+ attribute[i] + " onkeyup=advancedSearch() size=20></td></tr>";
 	}
 	context = "person";
-	temp += '</table><input type=button value=Suche onclick="advancedSearch()">';
+	temp += '</table>';
+	temp += "</div><div id=result></div>";
 
 	document.getElementById('upper_right').innerHTML = temp;
 
@@ -292,9 +306,10 @@ function searchForm() {
 // called by: createOrEditPerson() -- triggered by Menu entry "Person bearbeiten" if 
 // 			  person isnot defined yet. 
 // --------------------------------------------------------------------------------------------
-function createForm() {
+function createForm(calledby) {
 
 	$("#upper_right").html("");
+	$(".submenu").hide();
 	// $("#dialog1bottom").html("");
 
 	var temp = "<H2> Neue Person anlegen </H2><table>";
@@ -309,18 +324,18 @@ function createForm() {
 	}
 	temp += '</table>'; 
 	
-    temp += '<input type=button value=create  onclick="createEntry()">';
-    $("#upper_right").html(temp);
-	/*
+    // temp += '<input type=button value=create  onclick="createEntry()">';
+    // $("#upper_right").html(temp);
+	
 	$("#dialog1top").html(temp);
 	$("#dialog1").dialog("option", "title", "Neue Person anlegen");
 	$( "#dialog1" ).dialog( "option", "buttons", { 
-		 "Person anlegen": function() { createEntry(); $(this).dialog("close"); } 
+		 "Person anlegen": function() { createEntry(calledby); $(this).dialog("close"); } 
 		} );
 	
 
 	$("#dialog1").dialog("open");
-	 */
+	 
 }
 // --------------------------------------------------------------------------------------------
 // Aux function: HTML content : edit or create person
@@ -328,8 +343,9 @@ function createForm() {
 // --------------------------------------------------------------------------------------------
 function updateForm(person) {
 
+		console.log(this);
 		if(person.ID == " ")
-			createForm();
+			createForm(calledby);
 		else {
 		$("#dialog1top").html(person.toForm());
 		$("#dialog1bottom").html("");
@@ -344,12 +360,20 @@ function updateForm(person) {
 // Aux function: HTML content : search in Database
 // called by: Menu entry "Suche in Datenbank" 
 // --------------------------------------------------------------------------------------------
-function searchInDatabase(person) {
+function searchInDatabase(calledby) {
 	
-	var temp = '<input type="text" name="quicksearchindialog" \
-		        size=10 onkeyup=quickSearchInDialog() ></td>';
+	var temp = '<input type="text" id="quicksearchinDialog" \
+		        size=10></td>';
 
 	$("#dialog1top").html(temp);
+	
+	// Add Eventhandler 
+	switch(calledby){
+	case "mainpersonmenu": $("#quicksearchinDialog").on("keyup", function(){quickSearchInDialog("mainpersonmenu");});break;
+	case "fathermenu": $("#quicksearchinDialog").on("keyup", function(){quickSearchInDialog("fathermenu");});break;
+	case "mothermenu": $("#quicksearchinDialog").on("keyup", function(){quickSearchInDialog("mothermenu");});break;
+	default: break;
+	}
 	$("#dialog1bottom").html(" ");
 	$("#dialog1").dialog("option", "title", "Person in Datenbank suchen");
 	$( "#dialog1" ).dialog( "option", "buttons", { 
@@ -425,15 +449,21 @@ function thisPerson2Main(person) {
 // called by: SearchInDatabase (das ist die Funktion, wenn der Search button im Dialog
 //            gedr�ckt wird ) 
 // --------------------------------------------------------------------------------------------
-function quickSearchInDialog() {
+function quickSearchInDialog(calledby) {
 	// quicksearch ist eine fuzzy search,
 	// was die Datenbank nach �hnlichen Nach- und Vornamen durchsucht
 	// Die Onclick Aktion ist:
 	// die Details der geklickten Person werden oben rechts angezeigt und
 	// k�nnen bearbeitet werden
-	var query = $("input[name='quicksearchindialog']"); // Suchtext wird gelesen
+	var query = $("input[id='quicksearchinDialog']"); // Suchtext wird gelesen
 	init();
-	req.onreadystatechange = personListinDialog;
+	switch(calledby){
+	case "mainpersonmenu": req.onreadystatechange = function(){personListinDialog("mainpersonmenu");};break;
+	case "fathermenu":  req.onreadystatechange = function(){personListinDialog("fathermenu");};break;
+	case "mothermenu":  req.onreadystatechange = function(){personListinDialog("mothermenu");};break;
+	default: break;
+	}
+	
 	req.send("type=q&SURNAME=" + query[0].value + "&PRENAME=" + query[0].value);
 
 }
@@ -468,7 +498,7 @@ function advancedSearch() {
 		}
 		console.log(query);
 	}
-
+	
 	init();
 	req.onreadystatechange = personList;
 	req.send(query);
@@ -478,7 +508,7 @@ function advancedSearch() {
 // --------------------------------------------------------------------------------------------
 // Aux function: Call server with form data from Dialog -- create person
 // --------------------------------------------------------------------------------------------
-function createEntry() {
+function createEntry(calledby) {
 	// CallFuntion um einen Eintrag in der Datenbank zu ezeugen.
 	// Highlights von Feldern werden zur�ckgenommen
 	// Dann wird der http request String aufgebaut
@@ -512,19 +542,16 @@ function createEntry() {
 			if (req.status == 200) {
 				processXMLResponse();
 				// Unterscheidung der F�lle ob Vater, Mutter angelegt worden ist
-				if (mainPerson != null
-						&& (mainPerson.father.menu.clicked == true || mainPerson.mother.menu.clicked == true)) {
+				// calledby = 1 , Vater wurde angelegt
+				if (calledby != "new" ) {
 					var query2 = "type=u";
-					// fall 1: vater wurde angelegt: Dann muss die ID, jetzt bei
-					// mainperson einegtragen werden
-					if (mainPerson.father.menu.clicked == true) {
-						query2 += "&" + "FATHER_ID=" + listOfPerson.get(0).ID
-								+ "&ID=" + mainPerson.ID;
+					if(calledby == "fathermenu") {
+					query2 += "&" + "FATHER_ID=" + listOfPerson.get(0).ID + "&ID=" + mainPerson.ID;
 					}
 					// fall 2: Mutter wurde angelegt: Dann muss die ID, jetzt
 					// bei
 					// mainperson einegtragen werden
-					if (mainPerson.mother.menu.clicked == true) {
+					if (calledby == "mothermenu") {
 						query2 += "&" + "MOTHER_ID=" + listOfPerson.get(0).ID
 								+ "&ID=" + mainPerson.ID;
 					}
@@ -539,11 +566,9 @@ function createEntry() {
 							if (req.status == 200) {
 								processXMLResponse();
 								var footer = $("#footer2");
-								footer
-										.html(listOfPerson
-												.toTable("updateClass"));
+								footer.html(listOfPerson.toTable("updateClass"));
 								setPersonOnClick();
-								mainPerson = listOfPerson.get(0);
+								mainPerson = listOfPerson.get(0);						
 								showBranch();
 							}
 						}
@@ -636,7 +661,7 @@ function setPersonOnClick() {
 //called by: personListInDialog()
 //After the result is put into a table, the onclick behavior of rows is set
 //--------------------------------------------------------------------------------------------
-function setDialogPersonOnClick() {
+function setDialogPersonOnClick(calledby) {
 	// alle rows in einer table in einem dialog sind von der Klasse dialogUpdateClass.
 	var obj = $(".dialogUpdateClass");
 	obj.click(function() {
@@ -646,13 +671,14 @@ function setDialogPersonOnClick() {
 		$(this).addClass("green"); 
 		// Hier muss jetzt der code rein, wo die ausgew�hlte Person 
 		// Denn jetzt in der Branch view hinplatziert werden soll
-		// Case 1: mainperson Menu: Option "anderer Zweig bearbeiten" 
+		// Case 0: mainperson Menu: Option "anderer Zweig bearbeiten" 
 		//         die ausgew�hlte Person wird geladen, als mainPerson gesetzt und angezeigt 
-		// case 2: Father Menu: die ausgew�hlte Person wird als Vater  der mainPerson aktualisiert
+		// case 1: Father Menu: die ausgew�hlte Person wird als Vater  der mainPerson aktualisiert
 		// 					die aktualisierte mainPerson wirdvom server zur�ckgegeben und angezeigt
-		// case 3  Mother Menu: die ausgew�hlte Person wird als Mutter der mainPerson aktualisiert
+		// case 2  Mother Menu: die ausgew�hlte Person wird als Mutter der mainPerson aktualisiert
 		//					die aktualisierte mainPerson wirdvom server zur�ckgegeben und angezeigt
-		if (mainPerson.menu.clicked == true) {
+	
+		if (calledby == "mainpersonmenu") {
 			mainPerson = listOfPerson.get(pos);
 			var footer = $("#footer2");
 			// listOfPerson.clear();
@@ -664,18 +690,18 @@ function setDialogPersonOnClick() {
 			setPersonOnClick();
 			showBranch();
 		} else 
-			if(mainPerson.partner.menu.clicked == true)
+			if(calledby == 3)
 			{
 				partnerRelationDialog(listOfPerson.get(pos));
 			}
 			else
 				{
 			var query2 = "type=u";
-			if (mainPerson.father.menu.clicked == true) {
+			if (calledby == "fathermenu") {
 				query2 += "&" + "FATHER_ID=" + listOfPerson.get(pos).ID
 						+ "&ID=" + mainPerson.ID;
 			}
-			if (mainPerson.mother.menu.clicked == true) {
+			if (calledby == "mothermenu") {
 				query2 += "&" + "MOTHER_ID=" + listOfPerson.get(pos).ID
 						+ "&ID=" + mainPerson.ID;
 			}
@@ -719,7 +745,7 @@ function personList() {
 		// req Status 200 = OK, 404 = page not found
 		if (req.status == 200) {
 			processXMLResponse(); // parse XML response, generate list of persons
-			var footer = $("#footer2");
+			var footer = $("#result");
 			footer.html(listOfPerson.toTable("updateClass"));
 			// set click behavior of table rows
 			setPersonOnClick();
@@ -731,7 +757,7 @@ function personList() {
 //called by: 
 //After the result is put into a table, the onclick behaviour of rows is set
 //--------------------------------------------------------------------------------------------
-function personListinDialog() {
+function personListinDialog(calledby) {
 	// Callbackfunktion f�r die Suchanfragen an die Datenbank
 	// Eine Suchanfrage liefert immer eine Liste von Personen, die sich f�r die
 	// Suche qualifizieren, zur�ck
@@ -747,7 +773,7 @@ function personListinDialog() {
 			var footer = $("#dialog1bottom");
 			footer.html(listOfPerson.toTable("dialogUpdateClass"));
 			// Das click behavior im Dialog ist anders als bei einer quicksearch oder advancedsearch
-			setDialogPersonOnClick();  
+			setDialogPersonOnClick(calledby);  
 		}
 	}
 }
@@ -782,18 +808,7 @@ function processXMLResponse() {
 		}
 	}
 }
-// --------------------------------------------------------------------------------------------
-// Aux function: Menus in showbranch
-// --------------------------------------------------------------------------------------------
-//
 
-function showMenu2(clickedId){
-	$(clickedId).slideToggle();
-}
-function cleanMenu(clickedId){
-	var filter = ".submenu:not('"+ clickedId+"')";
-	$(filter).hide();
-}
 
 //--------------------------------------------------------------------------------------------
 //Aux function: descendantTree() 
@@ -1007,57 +1022,78 @@ function displayAncestorTree() {
 
 function showBranch(){
 	
-	// hier werden die Menueoptionen für Vorfahrenbaum und NAchfahrenbaum aktiviert
-	// denn jetzt ist eine Person selektiert für die ein Baum bestimmt werden kann 
-	$(".option2").removeProp("disabled");
-	$(".option2").addClass("option");
-	$(".option2").removeClass("option2");
-	
 	// Jetzt muss das upper_right div Elemnt mit der default Ansicht eines Zweiges gefüllt werden 
 	var tempString = ' \
 	<H1>Familienzweig von ' + mainPerson.PRENAME + ' ' + mainPerson.SURNAME + '</H1><p>  \
 	<div id=parents> \
-	<div class=panel id=father onmouseenter=cleanMenu("#fathermenu") onclick=showMenu2("#fathermenu")>Vater </div> \
-	<div class=submenu id=fathermenu hidden></div> \
-	<div id=line1></div> \
-	<div id=line2></div> \
-	<div class=panel id=mother onmouseenter=cleanMenu("#mothermenu") onclick=showMenu2("#mothermenu")>Mutter</div> \
-	<div class=submenu id=mothermenu hidden>\
-	<ul> \
-	<li onclick= updateForm(mainPerson.mother) > Daten dieser Person bearbeiten </li>\
-	<li> Andere Person aus Datenbank als Mutter setzen </li>\
-	<li> Neue Person als Mutter anlegen </li></ul>\
-	</div> \
-	<div id=line3></div> \
-	<div id=line4></div> \
+	 <div class=container id=fathercontainer>Vater \
+	  <div class=panel id=father></div> \
+	 </div> \
+	 <div class=container id=mothercontainer>Mutter\
+	   <div class=panel id=mother></div>\
+	 </div> \
 	</div> \
 	<div id=personandpartner> \
-	<div class=panel id=mainperson onmouseenter=cleanMenu("#personmenu") onclick = showMenu2("#personmenu")>Person	</div> \
-	<div class=submenu id=personmenu hidden></div> \
-	<img id = partnerlink src=rings.png width = 20px height = 10px> \
+	<div class=container id=mainpersoncontainer>\
+		<div class=panel  id=mainperson></div>	\
+	</div> \
+	<img id=partnerlink src=rings.png> \
 	<div class=panel id=partner>Partner</div> \
 	</div> \
 	</div> \
 	';
 	$("#upper_right").html(tempString);
 	
+	
+	
+	$(".panel").on("mouseover", function(e){
+		var element = e.target;
+		var menuid = "#" + element.id + "menu" ;
+		var filter = ".submenu:not('"+ menuid +"')";
+		$(filter).hide();
+		
+		var selectedPanel = "#"+element.id;	
+		var deselectedPanel =".panel:not('"+ element.id+"')";
+		$(deselectedPanel).css("background-color","green");
+		$(selectedPanel).css("background-color","sienna");
+	
+		$(menuid).css("background-color","sienna");
+		$(menuid).show();
+	
+	
+	});
+	
+	if(mainPerson.father.ID ==" "){
+		$("#editfather").hide();
+		$("#father2main").hide();
+	}
+	
+	else
+	{
+		$("#father2show").hide();
+		$("#editfather").show();
+		$("#editfather").on("click",function(e){
+		updateForm(mainPerson.father);
+		});
+	}
+		
 	// Panels mit Daten füllen 
 	$("#father").html(mainPerson.father.PRENAME+ "<br>" + mainPerson.father.SURNAME +"<br>" + mainPerson.father.BIRTHDAY +"<br>" + mainPerson.father.LASTPROFESSION);
 	$("#mother").html(mainPerson.mother.PRENAME+"<br> " + mainPerson.mother.SURNAME + "<br> " + mainPerson.mother.BIRTHDAY + "<br> " + mainPerson.mother.LASTPROFESSION);
 	$("#mainperson").html(mainPerson.PRENAME+"<br> " + mainPerson.SURNAME + "<br> " + mainPerson.BIRTHDAY + "<br> " + mainPerson.LASTPROFESSION);
-	
+	$("#partner").html(mainPerson.partner.PRENAME+"<br> " + mainPerson.partner.SURNAME + "<br> " + mainPerson.partner.BIRTHDAY + "<br> " + mainPerson.partner.LASTPROFESSION);
 	
 	// Die Panel-width passt sich dem Text an, daher müssen jetzt die Verbindungslinien justiert werden 
 	// momentan wird nur das Vaterpanel herangezogen. 
 	// Das default Vaterpanel hat eine Länge von 172px. dazu gehört die Länge von 86px der Linie1. Zunächst werden die aktuelle Länge des Vaterpanels bestimmt
 	// Danach die Linie1 justiert. Das reicht, denn linie2 fügt sich automatisch richtig ein durch floating layout. 
-	var parentWidth = $("#father").outerWidth(true);
+	var parentWidth = $("#fathercontainer").outerWidth(true);
 	var diff = 172-parentWidth;
 	$("#line1").outerWidth(diff+86);
 	// Die vertikale Linie 3 muss auch justiert werden . Linie 4 fügt sich richtig einaufgrund des floating layouts. 
 	$("#line3").css({"margin-left": diff +86-5});
 	
-	$("#partner").html("parentWidth: "+ parentWidth +  "New lineWidth: " + $("#line1").outerWidth());
+	// $("#partner").html("parentWidth: "+ parentWidth +  "New lineWidth: " + $("#line1").outerWidth());
 	
 	
 	
@@ -1071,7 +1107,7 @@ $(function() {
 		position : {
 			my : "left+10 top+10",
 			at : "left top",
-			of : "#footer2"
+			of : "#header"
 		},
 		height : "auto",
 		width : "auto",

@@ -14,6 +14,7 @@ public class Person {
     private Person mother=null;
     private List <Person> children = null; 
     private List <Person> partner =null;
+    private List <PartnerRelation> partnerRelations = null;
     	
 	public Person(){
 	  myPerson	= new Properties();
@@ -54,7 +55,7 @@ public class Person {
 	}
 
 	
-	public String toXMLString() throws IOException {
+	public String toXMLString()  {
 		
 		String xmlString = "<description>"; 
 
@@ -92,6 +93,11 @@ public class Person {
 					
 			}
 				
+		}
+		if(partnerRelations != null && !partnerRelations.isEmpty()){
+			for (PartnerRelation key: partnerRelations){
+				xmlString += key.toXML();	
+			}
 		}
 	
 		return xmlString;
@@ -139,6 +145,16 @@ public class Person {
 
 	public void setPartner(List <Person> partner) {
 		this.partner = partner;
+	}
+
+
+	public List <PartnerRelation> getPartnerRelations() {
+		return partnerRelations;
+	}
+
+
+	public void setPartnerRelations(List <PartnerRelation> partnerRelation) {
+		this.partnerRelations = partnerRelation;
 	}
 	
 	
